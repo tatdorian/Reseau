@@ -159,6 +159,71 @@ const HARD={
  ],
 };
 
+// Questions supplementaires couvrant le blueprint CCNA 200-301 (tous niveaux).
+// Format : [énoncé, [options], index bonne réponse, explication, niveau(1=facile,2=moyen,3=difficile)].
+const MORE={
+ vlan:[
+  ["Quel commutateur devient root bridge en STP ?",["Celui qui a le plus faible Bridge ID (priorité puis MAC)","Celui qui a la plus grande MAC","Le premier allumé","Celui avec le plus de ports"],0,"Le root bridge est élu sur le plus petit Bridge ID = priorité puis adresse MAC.",2],
+  ["Priorité de pont STP par défaut sur un switch Cisco ?",["32768","0","4096","65535"],0,"La priorité par défaut est 32768 (modifiable par pas de 4096).",2],
+  ["Quels sont les états de port en RSTP (802.1w) ?",["Discarding, Learning, Forwarding","Blocking, Listening, Learning, Forwarding, Disabled","Up, Down","Active, Passive"],0,"RSTP simplifie à 3 états : Discarding, Learning, Forwarding.",3],
+  ["Quel protocole d'agrégation de liens est le standard IEEE 802.3ad ?",["LACP","PAgP","STP","VTP"],0,"LACP est le standard ouvert ; PAgP est propriétaire Cisco.",2],
+  ["Quel protocole de découverte de voisins est propriétaire Cisco ?",["CDP","LLDP","ARP","ICMP"],0,"CDP est propriétaire Cisco ; LLDP (802.1AB) est le standard ouvert.",1],
+  ["Que fait `switchport port-security mac-address sticky` ?",["Apprend dynamiquement les MAC et les enregistre dans la configuration","Bloque toutes les MAC","Efface la table MAC","Active un trunk"],0,"Les MAC apprises sont collées (sticky) dans la running-config.",2],
+  ["À quoi sert PortFast et où l'activer ?",["Sur les ports d'accès vers les hôtes, pour passer directement en forwarding","Sur les trunks entre switches","Sur les ports routés","Sur les ports éteints"],0,"PortFast évite les délais STP sur les ports d'accès terminaux (à protéger par BPDU Guard).",3],
+  ["Quel est le rôle du root port sur un switch non-root ?",["Le port de plus faible coût vers le root bridge","Le port qui bloque le trafic","Le port vers les hôtes","Le port de management"],0,"Le root port est le meilleur chemin (coût le plus faible) vers le root bridge.",2],
+  ["Une table d'adresses MAC (CAM) associe une adresse MAC à :",["Un port du switch","Une adresse IP","Un VLAN natif","Une route"],0,"Le switch apprend la MAC source et l'associe au port d'arrivée.",1],
+  ["Quelle fonctionnalité bloque les BPDU reçues sur un port d'accès PortFast ?",["BPDU Guard","Root Guard","DHCP Snooping","Storm Control"],0,"BPDU Guard met le port en err-disabled s'il reçoit une BPDU, protégeant la topologie STP.",3],
+ ],
+ routage:[
+  ["Commande pour une route statique par défaut via 203.0.113.1 ?",["ip route 0.0.0.0 0.0.0.0 203.0.113.1","ip route default 203.0.113.1","ip default-network 203.0.113.1","route add default 203.0.113.1"],0,"ip route 0.0.0.0 0.0.0.0 <next-hop> crée la route par défaut.",1],
+  ["Intervalle Hello OSPF par défaut sur un réseau broadcast (et Dead associé) ?",["10 s (Dead 40 s)","30 s (Dead 120 s)","5 s (Dead 20 s)","60 s (Dead 240 s)"],0,"Sur broadcast : Hello 10 s, Dead 40 s (4x Hello). Ils doivent concorder entre voisins.",2],
+  ["Que fait la commande `passive-interface` en OSPF ?",["Annonce le réseau mais n'envoie pas de Hello sur l'interface","Désactive l'interface","Bloque le routage","Force l'élection DR"],0,"L'interface est annoncée dans OSPF mais n'établit pas d'adjacence (utile vers les LAN d'accès).",2],
+  ["HSRP : quel routeur devient actif ?",["Le routeur de plus haute priorité (puis plus haute IP)","Celui avec la plus faible IP","Le premier configuré","Le routeur de plus faible priorité"],0,"HSRP élit l'actif sur la priorité la plus élevée, départage par l'IP la plus haute.",3],
+  ["À quoi sert l'adresse IP virtuelle HSRP ?",["Servir de passerelle par défaut redondante aux hôtes","Identifier le switch root","Adresser le serveur DHCP","Numéroter le VLAN"],0,"Les hôtes pointent vers l'IP virtuelle ; le routeur actif y répond, avec bascule sur le standby.",2],
+  ["Quelle commande affiche les voisins OSPF et leur état ?",["show ip ospf neighbor","show ip route ospf","show ip protocols","show ospf interface"],0,"show ip ospf neighbor liste les voisins, leur état (FULL/2WAY...) et le rôle DR/BDR.",1],
+  ["Deux routes OSPF de coûts égaux vers la même destination : que fait le routeur ?",["Partage de charge (ECMP) sur les deux chemins","Garde une seule route","Rejette les deux","Augmente l'AD"],0,"OSPF installe jusqu'à plusieurs chemins de coût égal (ECMP) pour répartir la charge.",3],
+  ["Type de réseau OSPF par défaut sur une interface Ethernet ?",["Broadcast (avec élection DR/BDR)","Point-à-point","Non-broadcast","Point-à-multipoint"],0,"Sur Ethernet, OSPF est en mode broadcast et élit un DR/BDR.",2],
+  ["Commande pour une route statique vers 10.0.0.0/24 via 192.168.1.2 ?",["ip route 10.0.0.0 255.255.255.0 192.168.1.2","ip route 10.0.0.0 0.0.0.255 192.168.1.2","ip route 10.0.0.0/24 192.168.1.2","route 10.0.0.0 255.255.255.0 192.168.1.2"],0,"La syntaxe IOS attend le masque décimal : ip route 10.0.0.0 255.255.255.0 192.168.1.2.",1],
+  ["Sur une liaison multi-accès, pourquoi préférer un next-hop IP à une interface de sortie pour une route statique ?",["Pour éviter les problèmes de résolution ARP/recursion","Parce que c'est plus rapide","Parce que l'interface est obligatoire","Pour réduire l'AD"],0,"Sur multi-accès, l'interface seule oblige une résolution ARP de toutes les destinations ; le next-hop est plus fiable.",3],
+ ],
+ ip:[
+  ["Quel préfixe identifie les adresses IPv6 globales unicast (GUA) ?",["2000::/3","fc00::/7","fe80::/10","ff00::/8"],0,"Les GUA routables sur Internet sont dans 2000::/3.",2],
+  ["Quel préfixe correspond aux adresses IPv6 unique local (ULA) ?",["fc00::/7","2000::/3","fe80::/10","::1/128"],0,"Les ULA (équivalent du privé) sont dans fc00::/7.",2],
+  ["Quel est l'ordre des messages DHCP ?",["Discover, Offer, Request, Ack (DORA)","Request, Offer, Discover, Ack","Offer, Discover, Ack, Request","Hello, Offer, Ack"],0,"Le cycle DHCP est DORA : Discover, Offer, Request, Acknowledge.",1],
+  ["PAT (NAT overload) distingue les multiples sessions internes grâce à :",["Aux numéros de port source","À l'adresse MAC","Au VLAN","Au TTL"],0,"PAT multiplexe plusieurs IP privées sur une IP publique en suivant les ports source.",3],
+  ["Quel type de NAT associe une IP privée à une IP publique en 1:1 fixe ?",["NAT statique","PAT","NAT dynamique","CGNAT"],0,"Le NAT statique crée un mappage permanent 1:1, utile pour exposer un serveur.",2],
+  ["Quel est le rôle d'un serveur DNS ?",["Résoudre les noms de domaine en adresses IP","Attribuer des adresses IP","Router les paquets","Synchroniser l'heure"],0,"Le DNS traduit les noms (ex. www.site.com) en adresses IP.",1],
+  ["En NTP, que signifie un stratum plus bas ?",["Plus proche de la source de temps de référence (plus fiable)","Une horloge moins précise","Un fuseau horaire négatif","Un serveur de secours"],0,"Le stratum 1 est directement relié à une source précise ; le numéro augmente avec la distance.",2],
+  ["Adresse IPv6 multicast de tous les routeurs du lien ?",["ff02::2","ff02::1","ff02::5","fe80::1"],0,"ff02::2 = tous les routeurs ; ff02::1 = tous les nœuds du lien.",3],
+  ["Que permet SLAAC en IPv6 ?",["À l'hôte de générer son adresse à partir du préfixe annoncé (RA)","D'obtenir une IP via un bail DHCP","De router automatiquement","De chiffrer le trafic"],0,"Avec SLAAC, l'hôte forme son adresse à partir du préfixe du Router Advertisement (souvent via EUI-64).",2],
+  ["Forme abrégée correcte de 2001:0db8:0000:0000:0000:0000:0000:0001 ?",["2001:db8::1","2001:db8::0001:0","2001:db8:0:1::","21:db8::1"],0,"On supprime les zéros de tête et on remplace un seul groupe de zéros consécutifs par :: → 2001:db8::1.",1],
+ ],
+ osi:[
+  ["Entre TCP et UDP, lequel garantit la livraison ordonnée et la retransmission ?",["TCP","UDP","ICMP","ARP"],0,"TCP est fiable (accusés, retransmission, ordre) ; UDP est sans connexion.",1],
+  ["Quel mécanisme TCP régule le débit selon ce que le récepteur peut absorber ?",["Le fenêtrage (windowing)","Le split horizon","Le TTL","Le checksum"],0,"La fenêtre TCP (window) ajuste la quantité de données envoyées avant accusé.",2],
+  ["Port well-known du canal de contrôle FTP ?",["21","20","22","69"],0,"FTP utilise TCP 21 pour le contrôle (et 20 pour les données en mode actif).",2],
+  ["Un hôte envoie vers une IP située hors de son sous-réseau. Quelle MAC met-il en destination de la trame ?",["La MAC de sa passerelle par défaut","La MAC du serveur distant","FF:FF:FF:FF:FF:FF","Sa propre MAC"],0,"Hors sous-réseau, la trame est adressée à la MAC de la passerelle, qui routera ensuite.",3],
+  ["Que fait un switch d'une trame dont la MAC destination est inconnue (unknown unicast) ?",["Il l'inonde sur tous les ports sauf celui d'entrée","Il la rejette","Il la renvoie à l'émetteur","Il la met en file d'attente"],0,"En l'absence d'entrée dans la table CAM, le switch inonde la trame (flooding).",2],
+  ["Une adresse MAC fait 48 bits : que représentent les 24 premiers bits ?",["L'OUI, identifiant du fabricant","Le numéro de série complet","L'adresse IP","Le VLAN"],0,"Les 24 premiers bits sont l'OUI (fabricant), les 24 suivants sont propres à la carte.",1],
+  ["Quel port well-known utilise SSH ?",["22","23","443","80"],0,"SSH = TCP 22 ; Telnet (non chiffré) = 23.",1],
+  ["À quoi sert un ARP gratuit (gratuitous ARP) ?",["Annoncer/mettre à jour sa propre association IP-MAC (et détecter les doublons)","Résoudre une IP distante","Demander une IP au DHCP","Router un paquet"],0,"L'hôte émet un ARP pour sa propre IP, ce qui met à jour les caches et détecte les conflits d'adresse.",3],
+  ["Quelle couche segmente les données et les adresse par numéros de port ?",["Transport (4)","Réseau (3)","Liaison (2)","Session (5)"],0,"La couche Transport segmente et multiplexe via les ports source/destination.",1],
+  ["Quelle est la plage des ports dynamiques/éphémères selon l'IANA ?",["49152–65535","0–1023","1024–49151","1–1024"],0,"Well-known 0–1023, enregistrés 1024–49151, dynamiques 49152–65535.",2],
+ ],
+ acl:[
+  ["Avantage d'une ACL nommée par rapport à une ACL numérotée ?",["On peut éditer des lignes par numéro de séquence","Elle est plus rapide","Elle filtre aussi la MAC","Elle n'a pas de deny implicite"],0,"Les ACL nommées permettent l'insertion/suppression de lignes par séquence sans tout recréer.",2],
+  ["Contre quelle menace DHCP snooping protège-t-il ?",["Les serveurs DHCP pirates (rogue)","Le MAC flooding","Les boucles STP","Le VLAN hopping"],0,"DHCP snooping n'autorise les réponses DHCP que sur les ports de confiance, bloquant les serveurs pirates.",3],
+  ["Quel protocole AAA chiffre l'intégralité du paquet et sépare l'autorisation de l'authentification ?",["TACACS+","RADIUS","Kerberos","LDAP"],0,"TACACS+ (Cisco) chiffre tout le payload et sépare AAA ; RADIUS ne chiffre que le mot de passe.",2],
+  ["Que signifie AAA en sécurité réseau ?",["Authentication, Authorization, Accounting","Access, Audit, Alert","Authentication, Access, Accounting","Authorization, Auditing, Access"],0,"AAA = Authentification, Autorisation, Traçabilité (Accounting).",1],
+  ["Sur quelle table s'appuie le Dynamic ARP Inspection (DAI) ?",["La table de liaison (binding) du DHCP snooping","La table de routage","La table CAM","La table VLAN"],0,"DAI vérifie les paires IP-MAC via la binding table construite par DHCP snooping.",3],
+  ["Lequel est le plus sûr pour protéger le mode privilégié ?",["enable secret (mot de passe haché)","enable password (clair)","service password-encryption (type 7 réversible)","mot de passe console"],0,"enable secret stocke un hachage ; le type 7 de password-encryption est facilement réversible.",3],
+  ["Sens et placement recommandés d'une ACL étendue qui bloque un flux précis ?",["En entrée, au plus près de la source","En sortie, près de la destination","Sur une loopback","Sur le port console"],0,"L'ACL étendue se place près de la source pour rejeter le trafic au plus tôt.",2],
+  ["Quelle commande applique une ACL à une interface (trafic IP) ?",["ip access-group","access-class","ip filter","apply acl"],0,"ip access-group <num|nom> {in|out} applique l'ACL à l'interface ; access-class sert aux lignes VTY.",1],
+  ["Avec port-security, que fait l'action de violation `restrict` ?",["Rejette le trafic en excès et incrémente un compteur, sans fermer le port","Ferme le port (err-disabled)","Ignore la violation silencieusement","Réinitialise le switch"],0,"restrict rejette les trames non autorisées et journalise, mais laisse le port actif (contrairement à shutdown).",2],
+  ["Quel mot-clé d'ACL étendue n'autorise que le trafic TCP de retour de sessions déjà ouvertes ?",["established","permit","reflexive","dynamic"],0,"established matche les segments TCP avec ACK/RST, donc les réponses aux sessions initiées de l'intérieur.",3],
+ ],
+};
+
 const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const maskFromCidr=c=>{let m=[0,0,0,0];for(let i=0;i<c;i++)m[i/8|0]+=(128>>(i%8));return m.join('.');};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -257,8 +322,9 @@ function staticsOf(topic){
  const mk=(k,text,opts,correct,expl,diff)=>{const o=opts.slice();const cv=o[correct];shuffle(o);return{topic:k,text,options:o,correct:o.indexOf(cv),expl,diff};};
  const map=k=>BANK[k][1].map((q,i)=>mk(k,q[0],q[1],q[2],q[3],(SDIFF[k]&&SDIFF[k][i])||2));
  const hard=k=>(HARD[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],3));
- if(topic==='all'){let o=[];for(const k in BANK)o=o.concat(map(k),hard(k));return o;}
- return BANK[topic]?map(topic).concat(hard(topic)):[];
+ const more=k=>(MORE[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],q[4]||2));
+ if(topic==='all'){let o=[];for(const k in BANK)o=o.concat(map(k),hard(k),more(k));return o;}
+ return BANK[topic]?map(topic).concat(hard(topic),more(topic)):[];
 }
 function genOf(topic){
  if(topic==='all'){const ks=Object.keys(GEN);return GEN[ks[ri(0,ks.length-1)]]();}
