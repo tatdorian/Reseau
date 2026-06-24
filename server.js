@@ -291,6 +291,9 @@ wss.on('connection',(ws,req)=>{
     }else if(m.t==='next'){
       // Seul l'hôte fait passer à la question suivante après le reveal.
       if(ws===hostWs()&&game&&game.revealed)nextQuestion();
+    }else if(m.t==='menu'){
+      // L'hôte ramène toute la salle au menu (lobby), en stoppant la partie en cours.
+      if(ws===hostWs()){if(game){clearTimeout(game.timer);game=null;}broadcast({t:'tomenu'});pushLobby();}
     }else if(m.t==='answer'){
       const p=players.get(ws);
       if(p&&game&&!game.revealed&&!p.answered){

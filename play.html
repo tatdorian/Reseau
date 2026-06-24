@@ -26,6 +26,8 @@
   .btn{background:var(--teal);color:var(--ink);border:0;padding:13px;border-radius:10px;font-weight:700;
     font-size:1rem;cursor:pointer;width:100%;font-family:var(--sans);margin-top:12px;transition:.15s}
   .btn:hover{filter:brightness(1.06)} .btn:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  .btn.alt{background:transparent;color:var(--text);border:1px solid var(--line)}
+  .btn.alt:hover{filter:none;border-color:var(--teal);color:var(--teal)}
   .hidden{display:none}
 
   /* lobby */
@@ -164,6 +166,7 @@
     <div class="expl" id="rExpl"></div>
     <div class="lb" id="rLb"></div>
     <button class="btn hidden" id="nextBtn">Question suivante</button>
+    <button class="btn alt hidden" id="revMenuBtn">Menu</button>
     <div id="rWait" class="wait hidden">En attente que l'hôte continue…</div>
   </div>
 
@@ -173,6 +176,7 @@
     <div class="podium" id="podium"></div>
     <div class="lb" id="oLb"></div>
     <button class="btn hidden" id="replayBtn">Rejouer</button>
+    <button class="btn alt hidden" id="menuBtn">Retour au menu</button>
     <div id="overWait" class="wait hidden">En attente que l'hôte relance…</div>
   </div>
 
@@ -200,6 +204,8 @@ $("name").addEventListener("keydown",e=>{if(e.key==="Enter")$("joinBtn").click()
 $("startBtn").onclick=()=>{lastTopic=$("selTopic").value;lastCount=+$("selCount").value;lastDiff=$("selDiff").value;send({t:"start",topic:lastTopic,count:lastCount,diff:lastDiff});};
 $("replayBtn").onclick=()=>send({t:"start",topic:lastTopic,count:lastCount,diff:lastDiff});
 $("nextBtn").onclick=()=>{$("nextBtn").disabled=true;send({t:"next"});};
+$("menuBtn").onclick=()=>send({t:"menu"});
+$("revMenuBtn").onclick=()=>send({t:"menu"});
 
 function handle(m){
   if(m.t==="lobby"){
@@ -213,6 +219,7 @@ function handle(m){
     if(phase==="connecting"||phase==="join"||phase==="lobby")screen("lobby");
   }
   else if(m.t==="nohost"){showNoHost();}
+  else if(m.t==="tomenu"){clearInterval(timerInt);phase="lobby";screen("lobby");}
   else if(m.t==="question"){clearInterval(timerInt);showQuestion(m);}
   else if(m.t==="progress"){$("pAns").textContent=`${m.answered} / ${m.total} ont répondu`;}
   else if(m.t==="reveal"){clearInterval(timerInt);showReveal(m);}
@@ -268,6 +275,7 @@ function showReveal(m){
   $("nextBtn").textContent=last?"Voir les résultats":"Question suivante";
   $("nextBtn").disabled=false;
   $("nextBtn").classList.toggle("hidden",!m.host);
+  $("revMenuBtn").classList.toggle("hidden",!m.host);
   $("rWait").classList.toggle("hidden",!!m.host);
   clearInterval(timerInt);
   screen("reveal");
@@ -288,6 +296,7 @@ function showOver(m){
     pod.appendChild(d);});
   $("oLb").innerHTML=boardRows(b);
   $("replayBtn").classList.toggle("hidden",!m.host);
+  $("menuBtn").classList.toggle("hidden",!m.host);
   $("overWait").classList.toggle("hidden",m.host);
   screen("over");
 }
