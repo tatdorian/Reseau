@@ -206,20 +206,27 @@ function genOf(topic){
  if(topic==='all'){const ks=Object.keys(GEN);return GEN[ks[ri(0,ks.length-1)]]();}
  return GEN[topic]?GEN[topic]():genIp();
 }
+let recentQ=new Set(); // questions du questionnaire précédent, pour ne pas les retirer au suivant
 function buildQuestions(topic,count,diff){
  const d=DIFFS[diff]||0; // 0 = tous niveaux
  const okd=q=>!d||q.diff===d;
  const m=new Map();
+ // Passe 1 : on évite les questions déjà tombées au questionnaire précédent.
+ const addNew=q=>{if(q&&okd(q)&&!m.has(q.text)&&!recentQ.has(q.text))m.set(q.text,q);};
+ shuffle(staticsOf(topic).filter(q=>okd(q)&&!recentQ.has(q.text))).slice(0,Math.ceil(count/2)).forEach(addNew);
+ let g0=0;while(m.size<count&&g0++<count*300)addNew(genOf(topic));
+ // Passe 2 : si besoin, on réautorise les questions récentes (même niveau).
  const add=q=>{if(q&&okd(q)&&!m.has(q.text))m.set(q.text,q);};
- shuffle(staticsOf(topic).filter(okd)).slice(0,Math.ceil(count/2)).forEach(add);
- let g=0;while(m.size<count&&g++<count*200)add(genOf(topic));
  if(m.size<count)shuffle(staticsOf(topic).filter(okd)).forEach(add);
+ let g=0;while(m.size<count&&g++<count*200)add(genOf(topic));
  // Filet de sécurité : si le pool d'un niveau est trop petit, on complète avec les autres niveaux.
  if(m.size<count){
   shuffle(staticsOf(topic)).forEach(q=>{if(m.size<count&&!m.has(q.text))m.set(q.text,q);});
   let g2=0;while(m.size<count&&g2++<count*200){const q=genOf(topic);if(q&&!m.has(q.text))m.set(q.text,q);}
  }
- return shuffle([...m.values()]).slice(0,count);
+ const out=shuffle([...m.values()]).slice(0,count);
+ recentQ=new Set(out.map(q=>q.text)); // mémorise pour le prochain questionnaire
+ return out;
 }
 
 const page=fs.readFileSync(path.join(__dirname,'play.html'));
