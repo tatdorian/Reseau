@@ -38,7 +38,7 @@ Tes potes : http://192.168.1.42:3000   (meme WiFi)
 - Changer le port : `PORT=4000 npm start`.
 - Voir la taille du pool de questions par theme : `node server.js count`.
 - Reglage dans `server.js` en haut : `DUR` (duree par question, 30 s). Le passage a la question suivante est desormais declenche manuellement par l'hote.
-- Niveaux de difficulte : les questions (rediges + generees, alignees CCNA) sont taggees Facile / Moyen / Difficile et filtrees selon le choix de l'hote. Si un niveau a trop peu de questions pour le total demande, le pool est complete avec les autres niveaux.
+- Niveaux de difficulte : les questions sont taggees Facile / Moyen / Difficile et filtrees selon le choix de l'hote. Le niveau Difficile ajoute un pool de questions type examen CCNA 200-301 (scenarios, depannage de config, VLSM, election DR/BDR, longest prefix match, EUI-64, ACL etendues, port-security...). L'ordre des reponses est melange a chaque tirage. Si un niveau a trop peu de questions pour le total demande, le pool est complete avec les autres niveaux.
 - Anti-repetition : les questions du questionnaire precedent sont evitees au tirage suivant, donc ca change a chaque partie.
 - Profil / Passe de combat : chaque joueur gagne de l'XP (= son score) a la fin de chaque partie, monte de niveau et debloque des recompenses. La progression est sauvegardee dans le navigateur (localStorage), sans compte. Bouton "Profil · Passe de combat" sur l'ecran d'accueil et dans le lobby. Recompenses :
   - Avatars (emoji) affiches a cote du pseudo, dans le classement et sur le podium ;

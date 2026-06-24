@@ -104,6 +104,61 @@ const BANK={
  ]],
 };
 
+// Questions type examen CCNA 200-301, niveau DIFFICILE (scénarios, dépannage, calculs avancés).
+// Format : [énoncé, [options], index bonne réponse, explication]. (Les options sont mélangées au tirage.)
+const HARD={
+ vlan:[
+  ["SW1 et SW2 sont reliés par un trunk. SW1 a `switchport trunk native vlan 1`, SW2 a `switchport trunk native vlan 99`. Quel symptôme observe-t-on ?",["CDP signale un native VLAN mismatch et le trafic non taggué fuit d'un VLAN à l'autre","Le trunk passe immédiatement en err-disabled","Tous les VLAN cessent de fonctionner","Le switch redémarre"],0,"Un native VLAN mismatch est détecté par CDP ; le trafic du native VLAN peut passer d'un VLAN à l'autre (risque de sécurité)."],
+  ["Deux ports reliés sont tous deux en `switchport mode dynamic auto`. Quel est l'état du lien ?",["Access : aucun trunk ne se forme","Trunk 802.1Q","Err-disabled","Routed"],0,"Deux ports en dynamic auto n'initient pas la négociation DTP : le lien reste en mode access."],
+  ["Sur un routeur en router-on-a-stick, quelle commande place le VLAN 20 sur la sous-interface Gi0/0.20 ?",["encapsulation dot1q 20","switchport access vlan 20","switchport trunk allowed vlan 20","vlan 20"],0,"Sur une sous-interface, encapsulation dot1q 20 associe le tag ; l'IP de passerelle se met ensuite sur la sous-interface."],
+  ["Le mode de violation de port-security par défaut sur un switch Cisco est :",["shutdown : le port passe en err-disabled","protect","restrict","off"],0,"Par défaut la violation déclenche shutdown : le port passe en err-disabled à la première violation."],
+  ["Un switch ajouté au domaine VTP avec un numéro de révision plus élevé provoque :",["L'écrasement de la base VLAN de tout le domaine","Aucun effet","Le passage automatique en mode transparent","Une nouvelle élection de root bridge"],0,"Le switch au plus haut numéro de révision propage sa base VLAN : piège VTP classique pouvant effacer des VLAN."],
+  ["Quelle attaque exploite le double étiquetage 802.1Q combiné au native VLAN ?",["VLAN hopping (double tagging)","MAC flooding","DHCP starvation","ARP poisoning"],0,"Le double tagging permet de sauter vers un autre VLAN en abusant du native VLAN non taggué."],
+  ["Un PC du VLAN 30 n'a aucun accès ; show vlan brief montre son port dans VLAN 1 (port déjà en mode access). Quelle commande corrige ?",["switchport access vlan 30","switchport mode trunk","switchport voice vlan 30","no switchport"],0,"Le port doit être affecté au bon VLAN d'accès : switchport access vlan 30."],
+  ["Pour qu'un trunk ne transporte que les VLAN 10, 20 et 30, quelle commande utiliser ?",["switchport trunk allowed vlan 10,20,30","switchport access vlan 10,20,30","switchport trunk native vlan 10,20,30","switchport mode trunk 10,20,30"],0,"switchport trunk allowed vlan 10,20,30 restreint la liste des VLAN autorisés sur le trunk."],
+ ],
+ routage:[
+  ["R1 apprend 192.168.5.0/24 via OSPF (AD 110), EIGRP (AD 90) et RIP (AD 120). Quelle route est installée ?",["EIGRP (AD 90)","OSPF (AD 110)","RIP (AD 120)","Les trois en load-balancing"],0,"À préfixe identique, le routeur choisit la plus faible distance administrative : EIGRP (90)."],
+  ["La table contient 10.1.1.0/24 (OSPF) et 10.1.0.0/16 (EIGRP). Vers quelle entrée part un paquet destiné à 10.1.1.50 ?",["10.1.1.0/24 via OSPF (longest match)","10.1.0.0/16 via EIGRP (AD plus faible)","Les deux en partage de charge","Le paquet est rejeté"],0,"Le longest prefix match prime sur l'AD : la route /24 plus spécifique est choisie."],
+  ["Segment broadcast OSPF : R1 et R2 ont priority 1, R3 priority 0 ; RID R1=1.1.1.1, R2=2.2.2.2, R3=3.3.3.3. Qui devient DR ?",["R2","R1","R3","Aucun DR n'est élu"],0,"À priorité égale, le plus haut Router-ID l'emporte : R2. R3 (priority 0) ne peut pas être DR/BDR."],
+  ["Quelle commande fait annoncer une route par défaut aux voisins OSPF ?",["default-information originate","redistribute static","ip default-network","ip default-gateway 0.0.0.0"],0,"default-information originate injecte la route par défaut dans le processus OSPF."],
+  ["Quelle commande active OSPF uniquement sur l'interface d'adresse 10.0.0.1/30 en aire 0 ?",["network 10.0.0.0 0.0.0.3 area 0","network 10.0.0.0 255.255.255.252 area 0","network 10.0.0.1 0.0.0.255 area 0","network 10.0.0.0 0.0.0.252 area 0"],0,"Le wildcard d'un /30 est 0.0.0.3 ; cette commande ne couvre que ce lien."],
+  ["Deux routeurs OSPF restent bloqués en état EXSTART/EXCHANGE. Cause la plus probable ?",["MTU mismatch sur les interfaces","Native VLAN mismatch","Distances administratives différentes","Noms d'hôte différents"],0,"Une différence de MTU empêche l'échange des DBD et bloque l'adjacence en EXSTART/EXCHANGE."],
+  ["Une route statique flottante vers 0.0.0.0/0 doit servir de secours à la route OSPF par défaut. Quelle AD lui donner ?",["Une AD supérieure à 110 (ex. 200)","0","1","110"],0,"Pour ne servir qu'en secours, la statique flottante doit avoir une AD supérieure à celle d'OSPF (110)."],
+  ["Dans EIGRP, le chemin de secours pré-calculé qui satisfait la condition de faisabilité s'appelle :",["Feasible successor","Successor","Stuck-in-active","Designated router"],0,"Le feasible successor est la route de secours déjà calculée, installée immédiatement si le successor tombe."],
+ ],
+ ip:[
+  ["Un segment LAN doit accueillir 500 hôtes. Quel est le masque le plus économique ?",["/23 (510 hôtes)","/24 (254 hôtes)","/22 (1022 hôtes)","/25 (126 hôtes)"],0,"/23 = 2^9 - 2 = 510 hôtes, le plus petit masque couvrant 500 hôtes."],
+  ["192.168.10.0/24 découpé en /27 : combien de sous-réseaux et d'hôtes chacun ?",["8 sous-réseaux de 30 hôtes","4 sous-réseaux de 62 hôtes","16 sous-réseaux de 14 hôtes","2 sous-réseaux de 126 hôtes"],0,"/27 emprunte 3 bits : 2^3 = 8 sous-réseaux, 2^5 - 2 = 30 hôtes chacun."],
+  ["À quel sous-réseau appartient l'hôte 192.168.10.66/26 ?",["192.168.10.64/26","192.168.10.0/26","192.168.10.32/27","192.168.10.96/26"],0,"Bloc /26 de 64 : 66 tombe dans 64–127, donc réseau 192.168.10.64."],
+  ["Plage d'adresses utilisables du réseau contenant 172.16.5.130/26 ?",["172.16.5.129 à 172.16.5.190","172.16.5.128 à 172.16.5.191","172.16.5.130 à 172.16.5.254","172.16.5.65 à 172.16.5.126"],0,"Réseau 172.16.5.128/26 : hôtes 129–190, broadcast 191."],
+  ["Depuis 172.16.0.0/16, quel masque donne au moins 1000 sous-réseaux ?",["/26","/25","/27","/24"],0,"Il faut 10 bits empruntés (2^10 = 1024 ≥ 1000) : /16 + 10 = /26."],
+  ["Avec EUI-64 et la MAC 00:1A:2B:3C:4D:5E, quel est l'identifiant d'interface IPv6 ?",["021A:2BFF:FE3C:4D5E","001A:2BFF:FE3C:4D5E","001A:2B3C:4D5E:FFFE","021A:2B3C:FFFE:4D5E"],0,"EUI-64 insère FFFE au milieu et inverse le 7e bit : 00 devient 02 → 021A:2BFF:FE3C:4D5E."],
+  ["Quelle est la dernière adresse utilisable de 10.10.10.0/30 ?",["10.10.10.2","10.10.10.3","10.10.10.1","10.10.10.4"],0,"/30 : réseau .0, hôtes .1 et .2, broadcast .3. Dernière utilisable = .2."],
+  ["Combien de liaisons point à point /30 peut-on créer dans un seul /24 ?",["64","32","16","128"],0,"256 / 4 = 64 sous-réseaux /30, un par liaison point à point."],
+ ],
+ osi:[
+  ["Dans quel ordre les en-têtes sont-ils ajoutés pour envoyer une requête HTTP sur Ethernet ?",["Données → en-tête TCP → en-tête IP → en-tête Ethernet","En-tête Ethernet → IP → TCP → Données","IP → TCP → Ethernet → Données","TCP → IP → Données → Ethernet"],0,"L'encapsulation descend les couches : segment (TCP), puis paquet (IP), puis trame (Ethernet)."],
+  ["Quel est l'ordre des drapeaux lors de l'établissement d'une connexion TCP ?",["SYN, SYN-ACK, ACK","SYN, ACK, FIN","ACK, SYN, ACK","SYN-ACK, ACK, SYN"],0,"Le three-way handshake TCP : SYN, puis SYN-ACK, puis ACK."],
+  ["Un routeur retire l'en-tête de liaison, choisit le chemin selon l'IP, puis ré-encapsule dans une nouvelle trame. Cela illustre :",["La décapsulation/ré-encapsulation à chaque saut L3","La commutation de couche 2","Le NAT","Le proxy ARP"],0,"À chaque saut routé, l'en-tête L2 est réécrit alors que l'en-tête IP de bout en bout reste (hors NAT)."],
+  ["Quel protocole de transport, sans connexion, est privilégié pour la VoIP, le DNS et le TFTP ?",["UDP","TCP","SCTP","ICMP"],0,"UDP, sans établissement ni retransmission, convient au temps réel et aux échanges courts."],
+  ["Quelle association protocole / port de transport est correcte ?",["HTTPS = TCP 443","SSH = UDP 22","SNMP = TCP 161","DNS = TCP 53 uniquement"],0,"HTTPS = TCP 443. SSH = TCP 22, SNMP = UDP 161, DNS = 53 (UDP en priorité)."],
+  ["À quelle couche OSI opère principalement un pare-feu qui filtre par numéro de port TCP/UDP ?",["Couche 4 (Transport)","Couche 3 (Réseau)","Couche 7 (Application)","Couche 2 (Liaison)"],0,"Le filtrage par numéro de port relève de la couche 4 (Transport)."],
+  ["Quel champ de l'en-tête IPv4 est décrémenté à chaque routeur pour éviter les boucles ?",["TTL","Checksum","Flags","Type of Service"],0,"Le TTL est décrémenté à chaque saut ; à 0 le paquet est rejeté (ICMP time exceeded)."],
+  ["Quelle PDU correspond à la couche Transport et quel adressage utilise-t-elle ?",["Segment, adressage par numéros de port","Paquet, adressage IP","Trame, adressage MAC","Bit, aucun adressage"],0,"La couche 4 produit des segments adressés par ports source et destination."],
+ ],
+ acl:[
+  ["L'entrée `permit tcp 192.168.1.0 0.0.0.255 any eq 80` autorise quel trafic ?",["Le HTTP issu du réseau 192.168.1.0/24 vers n'importe quelle destination","Le HTTP vers 192.168.1.0/24","Tout le TCP de 192.168.1.0/24","Le HTTPS depuis 192.168.1.0/24"],0,"Source 192.168.1.0/24, destination any, port destination 80 : HTTP sortant de ce réseau."],
+  ["Une ACL contient `10 permit ip any any` puis `20 deny tcp any any eq 23`. Le Telnet est-il bloqué ?",["Non : la ligne 10 (permit any) matche avant la ligne 20","Oui, le deny s'applique","Seulement en entrée","Seulement le Telnet sortant"],0,"L'ACL s'évalue de haut en bas au premier match : permit ip any any autorise tout avant d'atteindre le deny."],
+  ["Quelle ACL standard bloque exactement le réseau 172.16.16.0/20 ?",["access-list 10 deny 172.16.16.0 0.0.15.255","access-list 10 deny 172.16.16.0 0.0.255.255","access-list 10 deny 172.16.16.0 0.0.0.255","access-list 10 deny 172.16.16.0 0.0.7.255"],0,"Le wildcard d'un /20 est 0.0.15.255 (12 bits hôtes à 1)."],
+  ["Où placer une ACL étendue qui bloque le HTTP de PC-A vers le serveur B ?",["En entrée de l'interface la plus proche de PC-A","En sortie près du serveur B","Sur l'interface de loopback","Indifféremment"],0,"Une ACL étendue se place au plus près de la source pour rejeter le trafic au plus tôt."],
+  ["Effet de `access-list 100 permit tcp any any established` ?",["Autoriser le TCP de retour des sessions initiées de l'intérieur","Bloquer tout le TCP","Autoriser tout l'UDP","Ouvrir tous les ports entrants"],0,"established ne laisse passer que les segments TCP avec ACK/RST, donc les réponses à des sessions déjà ouvertes."],
+  ["Quelle commande applique l'ACL 10 au filtrage des connexions VTY (Telnet/SSH) ?",["access-class 10 in (sous line vty)","ip access-group 10 in","access-list vty 10","login access 10"],0,"Les lignes VTY se protègent avec access-class sous line vty, pas ip access-group."],
+  ["Dans une ACL, l'ordre des entrées importe car :",["L'évaluation s'arrête au premier match, de haut en bas","Les entrées sont triées par spécificité automatiquement","Seule la dernière entrée compte","L'ordre est sans effet"],0,"Une ACL est séquentielle : la première règle qui matche est appliquée, les suivantes sont ignorées."],
+  ["Une interface a `ip access-group 101 in` et l'ACL 101 ne contient qu'un permit tcp ... eq 22. Que devient le reste du trafic entrant ?",["Il est rejeté par le deny any implicite","Il est autorisé","Il est routé sans filtrage","Il est seulement journalisé"],0,"Toute ACL se termine par un deny any implicite : tout ce qui n'est pas explicitement permis est rejeté."],
+ ],
+};
+
 const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const maskFromCidr=c=>{let m=[0,0,0,0];for(let i=0;i<c;i++)m[i/8|0]+=(128>>(i%8));return m.join('.');};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -198,9 +253,12 @@ const SDIFF={
  acl:     [2,2,2,2,3,3,3,3,1,2,3,3,3,2,3,2,2,3],
 };
 function staticsOf(topic){
- const map=k=>BANK[k][1].map((q,i)=>({topic:k,text:q[0],options:q[1],correct:q[2],expl:q[3],diff:(SDIFF[k]&&SDIFF[k][i])||2}));
- if(topic==='all'){let o=[];for(const k in BANK)o=o.concat(map(k));return o;}
- return BANK[topic]?map(topic):[];
+ // Mélange l'ordre des réponses pour ne pas figer la position de la bonne réponse.
+ const mk=(k,text,opts,correct,expl,diff)=>{const o=opts.slice();const cv=o[correct];shuffle(o);return{topic:k,text,options:o,correct:o.indexOf(cv),expl,diff};};
+ const map=k=>BANK[k][1].map((q,i)=>mk(k,q[0],q[1],q[2],q[3],(SDIFF[k]&&SDIFF[k][i])||2));
+ const hard=k=>(HARD[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],3));
+ if(topic==='all'){let o=[];for(const k in BANK)o=o.concat(map(k),hard(k));return o;}
+ return BANK[topic]?map(topic).concat(hard(topic)):[];
 }
 function genOf(topic){
  if(topic==='all'){const ks=Object.keys(GEN);return GEN[ks[ri(0,ks.length-1)]]();}
