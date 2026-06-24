@@ -1,5 +1,5 @@
 const http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),{WebSocketServer}=require('ws');
-const PORT=process.env.PORT||3000, DUR=30, PAUSE=5;
+const PORT=process.env.PORT||3000, DUR=30;
 
 const BANK={
  vlan:["VLAN",[
@@ -112,33 +112,33 @@ const i2a=n=>[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.');
 const a2i=s=>{const p=s.split('.');return(((+p[0]<<24)>>>0)+(+p[1]<<16)+(+p[2]<<8)+ +p[3])>>>0;};
 const maskInt=c=>c===0?0:(0xFFFFFFFF<<(32-c))>>>0;
 const randIp=()=>ri(1,223)+'.'+ri(0,255)+'.'+ri(0,255)+'.'+ri(1,254);
-const Q=(t,text,options,correct,expl)=>({topic:t,text,options,correct,expl});
+const Q=(t,text,options,correct,expl,diff)=>({topic:t,text,options,correct,expl,diff:diff||2});
 const pickN=(arr,n,excl)=>{const s=new Set();let g=0;while(s.size<n&&g++<n*40){const v=arr[ri(0,arr.length-1)];if(v!==excl)s.add(v);}return[...s];};
 const wild=c=>maskFromCidr(c).split('.').map(x=>255-x).join('.');
 
 // ---- ADRESSAGE IP ----
 function genIp(){
  const k=ri(0,9);
- if(k===0){const c=ri(8,30);const h=Math.pow(2,32-c)-2;const r=opt4(h,[Math.pow(2,32-c),h+2,Math.round(h/2),Math.pow(2,32-(c-1))-2,Math.pow(2,32-(c+1))-2].map(x=>Math.max(0,Math.round(x))));return Q('ip',`Combien d'hôtes utilisables dans un /${c} ?`,r.options.map(x=>x.toLocaleString('fr')),r.correct,`2^(32-${c}) - 2 = ${h.toLocaleString('fr')}.`);}
- if(k===1){const c=ri(8,30);const m=maskFromCidr(c);const r=opt4(m,[maskFromCidr(c-1),maskFromCidr(c+1),maskFromCidr(c-2),maskFromCidr(c+2)]);return Q('ip',`Quel masque correspond à un /${c} ?`,r.options,r.correct,`/${c} = ${m}.`);}
- if(k===2){const c=ri(8,30);const m=maskFromCidr(c);const r=opt4('/'+c,['/'+(c-1),'/'+(c+1),'/'+(c-3),'/'+(c+2)]);return Q('ip',`À quelle notation CIDR correspond ${m} ?`,r.options,r.correct,`${m} = /${c}.`);}
- if(k===3){const c=ri(8,30);const w=wild(c);const r=opt4(w,[maskFromCidr(c),wild(c-1),wild(c+1)]);return Q('ip',`Quel wildcard correspond à un /${c} ?`,r.options,r.correct,`Inverse de /${c} : ${w}.`);}
- if(k===4){const c=ri(16,30);const ip=randIp();const mi=maskInt(c);const net=(a2i(ip)&mi)>>>0;const r=opt4(i2a(net),[ip,i2a((net+256)>>>0),i2a((net|(~mi>>>0))>>>0),i2a((net-256)>>>0)]);return Q('ip',`Quelle est l'adresse réseau de ${ip}/${c} ?`,r.options,r.correct,`${ip} & ${maskFromCidr(c)} = ${i2a(net)}.`);}
- if(k===5){const c=ri(16,30);const ip=randIp();const mi=maskInt(c);const net=(a2i(ip)&mi)>>>0;const bc=(net|(~mi>>>0))>>>0;const r=opt4(i2a(bc),[i2a(net),ip,i2a((bc+1)>>>0),i2a((bc-1)>>>0)]);return Q('ip',`Quelle est l'adresse de broadcast de ${ip}/${c} ?`,r.options,r.correct,`Broadcast de ${ip}/${c} = ${i2a(bc)}.`);}
- if(k===6){const c=ri(16,29);const ip=randIp();const mi=maskInt(c);const net=(a2i(ip)&mi)>>>0;const f=(net+1)>>>0;const r=opt4(i2a(f),[i2a(net),i2a((net+2)>>>0),ip,i2a((net|(~mi>>>0))>>>0)]);return Q('ip',`Première adresse utilisable du réseau de ${ip}/${c} ?`,r.options,r.correct,`Réseau ${i2a(net)} → 1ère utilisable ${i2a(f)}.`);}
- if(k===7){const c=ri(16,29);const ip=randIp();const mi=maskInt(c);const net=(a2i(ip)&mi)>>>0;const bc=(net|(~mi>>>0))>>>0;const l=(bc-1)>>>0;const r=opt4(i2a(l),[i2a(bc),i2a((net+1)>>>0),ip,i2a(net)]);return Q('ip',`Dernière adresse utilisable du réseau de ${ip}/${c} ?`,r.options,r.correct,`Broadcast ${i2a(bc)} → dernière utilisable ${i2a(l)}.`);}
- if(k===8){const o1=[ri(1,126),ri(128,191),ri(192,223)][ri(0,2)];const ip=o1+'.'+ri(0,255)+'.'+ri(0,255)+'.'+ri(1,254);const cls=o1<=126?'A':o1<=191?'B':'C';const r=opt4('Classe '+cls,['Classe A','Classe B','Classe C','Classe D'].filter(x=>x!=='Classe '+cls));return Q('ip',`À quelle classe appartient ${ip} ?`,r.options,r.correct,`1er octet ${o1} → classe ${cls}.`);}
+ if(k===0){const c=ri(8,30);const h=Math.pow(2,32-c)-2;const r=opt4(h,[Math.pow(2,32-c),h+2,Math.round(h/2),Math.pow(2,32-(c-1))-2,Math.pow(2,32-(c+1))-2].map(x=>Math.max(0,Math.round(x))));return Q('ip',`Combien d'hôtes utilisables dans un /${c} ?`,r.options.map(x=>x.toLocaleString('fr')),r.correct,`2^(32-${c}) - 2 = ${h.toLocaleString('fr')}.`,3);}
+ if(k===1){const c=ri(8,30);const m=maskFromCidr(c);const r=opt4(m,[maskFromCidr(c-1),maskFromCidr(c+1),maskFromCidr(c-2),maskFromCidr(c+2)]);return Q('ip',`Quel masque correspond à un /${c} ?`,r.options,r.correct,`/${c} = ${m}.`,2);}
+ if(k===2){const c=ri(8,30);const m=maskFromCidr(c);const r=opt4('/'+c,['/'+(c-1),'/'+(c+1),'/'+(c-3),'/'+(c+2)]);return Q('ip',`À quelle notation CIDR correspond ${m} ?`,r.options,r.correct,`${m} = /${c}.`,2);}
+ if(k===3){const c=ri(8,30);const w=wild(c);const r=opt4(w,[maskFromCidr(c),wild(c-1),wild(c+1)]);return Q('ip',`Quel wildcard correspond à un /${c} ?`,r.options,r.correct,`Inverse de /${c} : ${w}.`,3);}
+ if(k===4){const c=ri(16,30);const ip=randIp();const mi=maskInt(c);const net=(a2i(ip)&mi)>>>0;const r=opt4(i2a(net),[ip,i2a((net+256)>>>0),i2a((net|(~mi>>>0))>>>0),i2a((net-256)>>>0)]);return Q('ip',`Quelle est l'adresse réseau de ${ip}/${c} ?`,r.options,r.correct,`${ip} & ${maskFromCidr(c)} = ${i2a(net)}.`,3);}
+ if(k===5){const c=ri(16,30);const ip=randIp();const mi=maskInt(c);const net=(a2i(ip)&mi)>>>0;const bc=(net|(~mi>>>0))>>>0;const r=opt4(i2a(bc),[i2a(net),ip,i2a((bc+1)>>>0),i2a((bc-1)>>>0)]);return Q('ip',`Quelle est l'adresse de broadcast de ${ip}/${c} ?`,r.options,r.correct,`Broadcast de ${ip}/${c} = ${i2a(bc)}.`,3);}
+ if(k===6){const c=ri(16,29);const ip=randIp();const mi=maskInt(c);const net=(a2i(ip)&mi)>>>0;const f=(net+1)>>>0;const r=opt4(i2a(f),[i2a(net),i2a((net+2)>>>0),ip,i2a((net|(~mi>>>0))>>>0)]);return Q('ip',`Première adresse utilisable du réseau de ${ip}/${c} ?`,r.options,r.correct,`Réseau ${i2a(net)} → 1ère utilisable ${i2a(f)}.`,3);}
+ if(k===7){const c=ri(16,29);const ip=randIp();const mi=maskInt(c);const net=(a2i(ip)&mi)>>>0;const bc=(net|(~mi>>>0))>>>0;const l=(bc-1)>>>0;const r=opt4(i2a(l),[i2a(bc),i2a((net+1)>>>0),ip,i2a(net)]);return Q('ip',`Dernière adresse utilisable du réseau de ${ip}/${c} ?`,r.options,r.correct,`Broadcast ${i2a(bc)} → dernière utilisable ${i2a(l)}.`,3);}
+ if(k===8){const o1=[ri(1,126),ri(128,191),ri(192,223)][ri(0,2)];const ip=o1+'.'+ri(0,255)+'.'+ri(0,255)+'.'+ri(1,254);const cls=o1<=126?'A':o1<=191?'B':'C';const r=opt4('Classe '+cls,['Classe A','Classe B','Classe C','Classe D'].filter(x=>x!=='Classe '+cls));return Q('ip',`À quelle classe appartient ${ip} ?`,r.options,r.correct,`1er octet ${o1} → classe ${cls}.`,1);}
  let ip,priv;if(ri(0,1)===0){const b=[[10,ri(0,255)],[172,ri(16,31)],[192,168]][ri(0,2)];ip=b[0]+'.'+b[1]+'.'+ri(0,255)+'.'+ri(1,254);priv=true;}else{const o1=[ri(1,9),ri(11,126),ri(128,171),ri(193,223)][ri(0,3)];ip=o1+'.'+ri(0,255)+'.'+ri(0,255)+'.'+ri(1,254);priv=false;}
- const r=opt4(priv?'Privée':'Publique',['Privée','Publique']);return Q('ip',`L'adresse ${ip} est-elle privée ou publique ?`,r.options,r.correct,priv?'Dans une plage RFC 1918 → privée.':'Hors RFC 1918 → publique.');
+ const r=opt4(priv?'Privée':'Publique',['Privée','Publique']);return Q('ip',`L'adresse ${ip} est-elle privée ou publique ?`,r.options,r.correct,priv?'Dans une plage RFC 1918 → privée.':'Hors RFC 1918 → publique.',2);
 }
 
 // ---- VLAN ----
 function genVlan(){
  const k=ri(0,3);
- if(k===0){const id=ri(0,4096);let a;if(id===0||id===4095)a='Réservé';else if(id<=1005)a='Plage normale (1-1005)';else if(id<=4094)a='Plage étendue (1006-4094)';else a='Invalide';const r=opt4(a,['Plage normale (1-1005)','Plage étendue (1006-4094)','Réservé','Invalide']);return Q('vlan',`Le VLAN ID ${id} appartient à quelle catégorie ?`,r.options,r.correct,`${id} → ${a}.`);}
- if(k===1){const n=ri(2,4094);const c=`switchport access vlan ${n}`;const r=opt4(c,[`switchport mode vlan ${n}`,`vlan ${n} access`,`switchport trunk vlan ${n}`,`set vlan ${n}`]);return Q('vlan',`Quelle commande affecte un port d'accès au VLAN ${n} ?`,r.options,r.correct,`switchport access vlan ${n} (en mode access).`);}
- if(k===2){const n=ri(2,4094);const c=`encapsulation dot1q ${n}`;const r=opt4(c,[`encapsulation isl ${n}`,`switchport access vlan ${n}`,`dot1q vlan ${n}`,`vlan ${n} encapsulation`]);return Q('vlan',`Sur une sous-interface (router-on-a-stick), quelle commande associe le VLAN ${n} ?`,r.options,r.correct,`encapsulation dot1q ${n}.`);}
- const n=ri(2,4094);const c=`switchport trunk allowed vlan ${n}`;const r=opt4(c,[`switchport access vlan ${n}`,`switchport trunk vlan ${n}`,`vlan allowed ${n}`,`trunk allowed ${n}`]);return Q('vlan',`Quelle commande autorise uniquement le VLAN ${n} sur un trunk ?`,r.options,r.correct,`switchport trunk allowed vlan ${n}.`);
+ if(k===0){const id=ri(0,4096);let a;if(id===0||id===4095)a='Réservé';else if(id<=1005)a='Plage normale (1-1005)';else if(id<=4094)a='Plage étendue (1006-4094)';else a='Invalide';const r=opt4(a,['Plage normale (1-1005)','Plage étendue (1006-4094)','Réservé','Invalide']);return Q('vlan',`Le VLAN ID ${id} appartient à quelle catégorie ?`,r.options,r.correct,`${id} → ${a}.`,2);}
+ if(k===1){const n=ri(2,4094);const c=`switchport access vlan ${n}`;const r=opt4(c,[`switchport mode vlan ${n}`,`vlan ${n} access`,`switchport trunk vlan ${n}`,`set vlan ${n}`]);return Q('vlan',`Quelle commande affecte un port d'accès au VLAN ${n} ?`,r.options,r.correct,`switchport access vlan ${n} (en mode access).`,2);}
+ if(k===2){const n=ri(2,4094);const c=`encapsulation dot1q ${n}`;const r=opt4(c,[`encapsulation isl ${n}`,`switchport access vlan ${n}`,`dot1q vlan ${n}`,`vlan ${n} encapsulation`]);return Q('vlan',`Sur une sous-interface (router-on-a-stick), quelle commande associe le VLAN ${n} ?`,r.options,r.correct,`encapsulation dot1q ${n}.`,3);}
+ const n=ri(2,4094);const c=`switchport trunk allowed vlan ${n}`;const r=opt4(c,[`switchport access vlan ${n}`,`switchport trunk vlan ${n}`,`vlan allowed ${n}`,`trunk allowed ${n}`]);return Q('vlan',`Quelle commande autorise uniquement le VLAN ${n} sur un trunk ?`,r.options,r.correct,`switchport trunk allowed vlan ${n}.`,2);
 }
 
 // ---- ROUTAGE ----
@@ -146,23 +146,23 @@ const AD={'un réseau connecté':0,'une route statique':1,'eBGP':20,'EIGRP':90,'
 const BW=[['56 kbps',56000],['64 kbps',64000],['128 kbps',128000],['256 kbps',256000],['512 kbps',512000],['768 kbps',768000],['T1 (1,544 Mbps)',1544000],['E1 (2,048 Mbps)',2048000],['2 Mbps',2e6],['4 Mbps',4e6],['8 Mbps',8e6],['10 Mbps',1e7],['16 Mbps',16e6],['25 Mbps',25e6],['34 Mbps',34e6],['45 Mbps',45e6],['50 Mbps',5e7],['100 Mbps',1e8],['155 Mbps',155e6],['200 Mbps',2e8],['622 Mbps',622e6],['1 Gbps',1e9],['2,5 Gbps',25e8],['10 Gbps',1e10],['40 Gbps',4e10],['100 Gbps',1e11]];
 function genRoutage(){
  const k=ri(0,6);
- if(k===0){const ns=Object.keys(AD);const p=ns[ri(0,ns.length-1)];const v=AD[p];const r=opt4(String(v),[0,1,20,90,110,115,120,170,200].filter(x=>x!==v).map(String));return Q('routage',`Quelle est la distance administrative par défaut de ${p} ?`,r.options,r.correct,`AD de ${p} = ${v}.`);}
- if(k===1){const ns=Object.keys(AD);const p=ns[ri(0,ns.length-1)];const v=AD[p];const r=opt4(p,pickN(ns.filter(x=>x!==p),3));return Q('routage',`Quel élément a une distance administrative de ${v} ?`,r.options,r.correct,`AD ${v} → ${p}.`);}
- if(k===2){const refs=[['',1e8],[' (référence 1 Gbps)',1e9],[' (référence 10 Gbps)',1e10]];const rf=refs[ri(0,refs.length-1)];const b=BW[ri(0,BW.length-1)];const cost=Math.max(1,Math.round(rf[1]/b[1]));const r=opt4(String(cost),[Math.max(1,Math.round(cost/2)),Math.max(2,cost*2),cost+1,Math.max(1,Math.round(1e8/b[1]))].map(String));return Q('routage',`Coût OSPF d'un lien à ${b[0]}${rf[0]} ?`,r.options,r.correct,`Coût = référence / bande passante = ${cost}.`);}
- if(k===3){const h=ri(0,20);const ok=h<=15;const r=opt4(ok?'Accessible':'Inaccessible',['Accessible','Inaccessible']);return Q('routage',`En RIP, un réseau situé à ${h} sauts est-il accessible ?`,r.options,r.correct,ok?`${h} ≤ 15 → accessible.`:`${h} > 15 (max RIP) → inaccessible.`);}
- if(k===4){const c=ri(8,30);const w=wild(c);const r=opt4(w,[maskFromCidr(c),wild(c-1),wild(c+1)]);return Q('routage',`Quel wildcard utiliser dans la commande "network" pour annoncer un /${c} en OSPF ?`,r.options,r.correct,`Wildcard de /${c} = ${w}.`);}
- if(k===5){const a=Object.keys(AD);let i=ri(0,a.length-1),j=ri(0,a.length-1);while(j===i)j=ri(0,a.length-1);const win=AD[a[i]]<AD[a[j]]?a[i]:a[j];const r=opt4(win,[win===a[i]?a[j]:a[i]]);return Q('routage',`Entre ${a[i]} et ${a[j]}, quelle route est préférée (AD la plus faible) ?`,r.options,r.correct,`AD ${a[i]}=${AD[a[i]]}, ${a[j]}=${AD[a[j]]} → ${win}.`);}
- const M={'OSPF':'le coût (bande passante)','RIP':'le nombre de sauts','EIGRP':'la bande passante et le délai','BGP':'des attributs de chemin','IS-IS':'le coût'};const ks=Object.keys(M);const p=ks[ri(0,ks.length-1)];const r=opt4(M[p],pickN(Object.values(M).filter(x=>x!==M[p]),3));return Q('routage',`Sur quoi repose la métrique de ${p} ?`,r.options,r.correct,`${p} utilise ${M[p]}.`);
+ if(k===0){const ns=Object.keys(AD);const p=ns[ri(0,ns.length-1)];const v=AD[p];const r=opt4(String(v),[0,1,20,90,110,115,120,170,200].filter(x=>x!==v).map(String));return Q('routage',`Quelle est la distance administrative par défaut de ${p} ?`,r.options,r.correct,`AD de ${p} = ${v}.`,2);}
+ if(k===1){const ns=Object.keys(AD);const p=ns[ri(0,ns.length-1)];const v=AD[p];const r=opt4(p,pickN(ns.filter(x=>x!==p),3));return Q('routage',`Quel élément a une distance administrative de ${v} ?`,r.options,r.correct,`AD ${v} → ${p}.`,2);}
+ if(k===2){const refs=[['',1e8],[' (référence 1 Gbps)',1e9],[' (référence 10 Gbps)',1e10]];const rf=refs[ri(0,refs.length-1)];const b=BW[ri(0,BW.length-1)];const cost=Math.max(1,Math.round(rf[1]/b[1]));const r=opt4(String(cost),[Math.max(1,Math.round(cost/2)),Math.max(2,cost*2),cost+1,Math.max(1,Math.round(1e8/b[1]))].map(String));return Q('routage',`Coût OSPF d'un lien à ${b[0]}${rf[0]} ?`,r.options,r.correct,`Coût = référence / bande passante = ${cost}.`,3);}
+ if(k===3){const h=ri(0,20);const ok=h<=15;const r=opt4(ok?'Accessible':'Inaccessible',['Accessible','Inaccessible']);return Q('routage',`En RIP, un réseau situé à ${h} sauts est-il accessible ?`,r.options,r.correct,ok?`${h} ≤ 15 → accessible.`:`${h} > 15 (max RIP) → inaccessible.`,2);}
+ if(k===4){const c=ri(8,30);const w=wild(c);const r=opt4(w,[maskFromCidr(c),wild(c-1),wild(c+1)]);return Q('routage',`Quel wildcard utiliser dans la commande "network" pour annoncer un /${c} en OSPF ?`,r.options,r.correct,`Wildcard de /${c} = ${w}.`,3);}
+ if(k===5){const a=Object.keys(AD);let i=ri(0,a.length-1),j=ri(0,a.length-1);while(j===i)j=ri(0,a.length-1);const win=AD[a[i]]<AD[a[j]]?a[i]:a[j];const r=opt4(win,[win===a[i]?a[j]:a[i]]);return Q('routage',`Entre ${a[i]} et ${a[j]}, quelle route est préférée (AD la plus faible) ?`,r.options,r.correct,`AD ${a[i]}=${AD[a[i]]}, ${a[j]}=${AD[a[j]]} → ${win}.`,2);}
+ const M={'OSPF':'le coût (bande passante)','RIP':'le nombre de sauts','EIGRP':'la bande passante et le délai','BGP':'des attributs de chemin','IS-IS':'le coût'};const ks=Object.keys(M);const p=ks[ri(0,ks.length-1)];const r=opt4(M[p],pickN(Object.values(M).filter(x=>x!==M[p]),3));return Q('routage',`Sur quoi repose la métrique de ${p} ?`,r.options,r.correct,`${p} utilise ${M[p]}.`,1);
 }
 
 // ---- ACL ----
 function genAcl(){
  const k=ri(0,4);
- if(k===0){const n=ri(1,2699);let a;if((n<=99)||(n>=1300&&n<=1999))a='ACL standard';else if((n>=100&&n<=199)||(n>=2000&&n<=2699))a='ACL étendue';else a='Hors plage ACL IP';const r=opt4(a,['ACL standard','ACL étendue','Hors plage ACL IP']);return Q('acl',`À quel type correspond une ACL numérotée ${n} ?`,r.options,r.correct,`${n} → ${a}.`);}
- if(k===1){const c=ri(8,30);const w=wild(c);const r=opt4(w,[maskFromCidr(c),wild(c-1),wild(c+1)]);return Q('acl',`Quel wildcard couvre exactement un /${c} dans une ACL ?`,r.options,r.correct,`/${c} → ${w}.`);}
- if(k===2){const c=ri(8,30);const m=maskFromCidr(c);const w=wild(c);const r=opt4(m,[w,maskFromCidr(ri(8,30)),'0.0.0.0']);return Q('acl',`À quel masque réseau correspond le wildcard ${w} ?`,r.options,r.correct,`Inverse de ${w} = ${m}.`);}
- if(k===3){const c=ri(8,30);const w=wild(c);const r=opt4('/'+c,['/'+(c-1),'/'+(c+1),'/'+(c+2)]);return Q('acl',`Le wildcard ${w} correspond à quel préfixe CIDR ?`,r.options,r.correct,`${w} → /${c}.`);}
- const ip=randIp();const r=opt4('0.0.0.0',['255.255.255.255','0.0.0.255','255.0.0.0']);return Q('acl',`Quel wildcard cible l'hôte unique ${ip} (mot-clé host) ?`,r.options,r.correct,`host ${ip} = wildcard 0.0.0.0.`);
+ if(k===0){const n=ri(1,2699);let a;if((n<=99)||(n>=1300&&n<=1999))a='ACL standard';else if((n>=100&&n<=199)||(n>=2000&&n<=2699))a='ACL étendue';else a='Hors plage ACL IP';const r=opt4(a,['ACL standard','ACL étendue','Hors plage ACL IP']);return Q('acl',`À quel type correspond une ACL numérotée ${n} ?`,r.options,r.correct,`${n} → ${a}.`,2);}
+ if(k===1){const c=ri(8,30);const w=wild(c);const r=opt4(w,[maskFromCidr(c),wild(c-1),wild(c+1)]);return Q('acl',`Quel wildcard couvre exactement un /${c} dans une ACL ?`,r.options,r.correct,`/${c} → ${w}.`,3);}
+ if(k===2){const c=ri(8,30);const m=maskFromCidr(c);const w=wild(c);const r=opt4(m,[w,maskFromCidr(ri(8,30)),'0.0.0.0']);return Q('acl',`À quel masque réseau correspond le wildcard ${w} ?`,r.options,r.correct,`Inverse de ${w} = ${m}.`,3);}
+ if(k===3){const c=ri(8,30);const w=wild(c);const r=opt4('/'+c,['/'+(c-1),'/'+(c+1),'/'+(c+2)]);return Q('acl',`Le wildcard ${w} correspond à quel préfixe CIDR ?`,r.options,r.correct,`${w} → /${c}.`,3);}
+ const ip=randIp();const r=opt4('0.0.0.0',['255.255.255.255','0.0.0.255','255.0.0.0']);return Q('acl',`Quel wildcard cible l'hôte unique ${ip} (mot-clé host) ?`,r.options,r.correct,`host ${ip} = wildcard 0.0.0.0.`,3);
 }
 
 // ---- MODÈLE OSI ----
@@ -175,21 +175,30 @@ function layerOpt(correct){const s=new Set([correct]);while(s.size<4)s.add(ri(1,
 function genOsi(){
  const PDU={1:'un bit',2:'une trame',3:'un paquet',4:'un segment'};
  const k=ri(0,9);
- if(k===0){const ns=Object.keys(PROTO);const p=ns[ri(0,ns.length-1)];const r=layerOpt(PROTO[p]);return Q('osi',`À quelle couche OSI se situe ${p} ?`,r.options,r.correct,`${p} → couche ${PROTO[p]} (${L[PROTO[p]]}).`);}
- if(k===1){const ps=Object.keys(PORTS);const p=ps[ri(0,ps.length-1)];const sv=PORTS[p];const r=opt4(sv,pickN(Object.values(PORTS).filter(x=>x!==sv),3));return Q('osi',`Quel service utilise le port ${p} ?`,r.options,r.correct,`Port ${p} → ${sv}.`);}
- if(k===2){const n=ri(1,4);const r=opt4(PDU[n],[PDU[1],PDU[2],PDU[3],PDU[4]].filter(x=>x!==PDU[n]));return Q('osi',`Quelle est l'unité de données (PDU) de la couche ${n} (${L[n]}) ?`,r.options,r.correct,`Couche ${n} → ${PDU[n]}.`);}
- if(k===3){const n=ri(1,4);const r=layerOpt(n);const w=PDU[n].charAt(0).toUpperCase()+PDU[n].slice(1);return Q('osi',`${w} est la PDU de quelle couche ?`,r.options,r.correct,`${PDU[n]} → couche ${n}.`);}
- if(k===4){const n=ri(1,7);const r=opt4(L[n],Object.values(L).filter(x=>x!==L[n]));return Q('osi',`Quel est le nom de la couche ${n} ?`,r.options,r.correct,`Couche ${n} = ${L[n]}.`);}
- if(k===5){const n=ri(1,7);const r=opt4(String(n),[1,2,3,4,5,6,7].filter(x=>x!==n).map(String));return Q('osi',`Quel est le numéro de la couche ${L[n]} ?`,r.options,r.correct,`${L[n]} = couche ${n}.`);}
- if(k===6){const n=ri(1,6);const r=opt4(L[n+1],Object.values(L).filter(x=>x!==L[n+1]));return Q('osi',`Quelle couche se trouve juste au-dessus de la couche ${L[n]} ?`,r.options,r.correct,`Au-dessus de ${L[n]} → ${L[n+1]}.`);}
- if(k===7){const n=ri(2,7);const r=opt4(L[n-1],Object.values(L).filter(x=>x!==L[n-1]));return Q('osi',`Quelle couche se trouve juste en dessous de la couche ${L[n]} ?`,r.options,r.correct,`En dessous de ${L[n]} → ${L[n-1]}.`);}
- if(k===8){const rl=ROLE[ri(0,ROLE.length-1)];const r=layerOpt(rl[1]);return Q('osi',`Quelle couche assure ${rl[0]} ?`,r.options,r.correct,`→ couche ${rl[1]} (${L[rl[1]]}).`);}
- const eq=EQUIP[ri(0,EQUIP.length-1)];const r=layerOpt(eq[1]);return Q('osi',`À quelle couche opère ${eq[0]} ?`,r.options,r.correct,`${eq[0]} → couche ${eq[1]} (${L[eq[1]]}).`);
+ if(k===0){const ns=Object.keys(PROTO);const p=ns[ri(0,ns.length-1)];const r=layerOpt(PROTO[p]);return Q('osi',`À quelle couche OSI se situe ${p} ?`,r.options,r.correct,`${p} → couche ${PROTO[p]} (${L[PROTO[p]]}).`,2);}
+ if(k===1){const ps=Object.keys(PORTS);const p=ps[ri(0,ps.length-1)];const sv=PORTS[p];const r=opt4(sv,pickN(Object.values(PORTS).filter(x=>x!==sv),3));return Q('osi',`Quel service utilise le port ${p} ?`,r.options,r.correct,`Port ${p} → ${sv}.`,3);}
+ if(k===2){const n=ri(1,4);const r=opt4(PDU[n],[PDU[1],PDU[2],PDU[3],PDU[4]].filter(x=>x!==PDU[n]));return Q('osi',`Quelle est l'unité de données (PDU) de la couche ${n} (${L[n]}) ?`,r.options,r.correct,`Couche ${n} → ${PDU[n]}.`,2);}
+ if(k===3){const n=ri(1,4);const r=layerOpt(n);const w=PDU[n].charAt(0).toUpperCase()+PDU[n].slice(1);return Q('osi',`${w} est la PDU de quelle couche ?`,r.options,r.correct,`${PDU[n]} → couche ${n}.`,2);}
+ if(k===4){const n=ri(1,7);const r=opt4(L[n],Object.values(L).filter(x=>x!==L[n]));return Q('osi',`Quel est le nom de la couche ${n} ?`,r.options,r.correct,`Couche ${n} = ${L[n]}.`,1);}
+ if(k===5){const n=ri(1,7);const r=opt4(String(n),[1,2,3,4,5,6,7].filter(x=>x!==n).map(String));return Q('osi',`Quel est le numéro de la couche ${L[n]} ?`,r.options,r.correct,`${L[n]} = couche ${n}.`,1);}
+ if(k===6){const n=ri(1,6);const r=opt4(L[n+1],Object.values(L).filter(x=>x!==L[n+1]));return Q('osi',`Quelle couche se trouve juste au-dessus de la couche ${L[n]} ?`,r.options,r.correct,`Au-dessus de ${L[n]} → ${L[n+1]}.`,2);}
+ if(k===7){const n=ri(2,7);const r=opt4(L[n-1],Object.values(L).filter(x=>x!==L[n-1]));return Q('osi',`Quelle couche se trouve juste en dessous de la couche ${L[n]} ?`,r.options,r.correct,`En dessous de ${L[n]} → ${L[n-1]}.`,2);}
+ if(k===8){const rl=ROLE[ri(0,ROLE.length-1)];const r=layerOpt(rl[1]);return Q('osi',`Quelle couche assure ${rl[0]} ?`,r.options,r.correct,`→ couche ${rl[1]} (${L[rl[1]]}).`,2);}
+ const eq=EQUIP[ri(0,EQUIP.length-1)];const r=layerOpt(eq[1]);return Q('osi',`À quelle couche opère ${eq[0]} ?`,r.options,r.correct,`${eq[0]} → couche ${eq[1]} (${L[eq[1]]}).`,1);
 }
 
 const GEN={vlan:genVlan,routage:genRoutage,ip:genIp,osi:genOsi,acl:genAcl};
+const DIFFS={facile:1,moyen:2,difficile:3};
+// Niveau (1=facile, 2=moyen, 3=difficile) de chaque question rédigée de BANK, dans l'ordre.
+const SDIFF={
+ vlan:    [1,1,3,2,2,2,2,1,2,3,2,1,2,1,1,2,3,2],
+ routage: [1,2,2,2,1,3,1,2,2,2,3,3,2,2,1,3,2,1],
+ ip:      [1,2,3,2,2,2,2,2,3,1,1,2,3,3,3,1,1,2],
+ osi:     [1,1,1,1,2,2,1,1,2,2,2,1,2,3,1,2,2,2],
+ acl:     [2,2,2,2,3,3,3,3,1,2,3,3,3,2,3,2,2,3],
+};
 function staticsOf(topic){
- const map=k=>BANK[k][1].map(q=>({topic:k,text:q[0],options:q[1],correct:q[2],expl:q[3]}));
+ const map=k=>BANK[k][1].map((q,i)=>({topic:k,text:q[0],options:q[1],correct:q[2],expl:q[3],diff:(SDIFF[k]&&SDIFF[k][i])||2}));
  if(topic==='all'){let o=[];for(const k in BANK)o=o.concat(map(k));return o;}
  return BANK[topic]?map(topic):[];
 }
@@ -197,12 +206,19 @@ function genOf(topic){
  if(topic==='all'){const ks=Object.keys(GEN);return GEN[ks[ri(0,ks.length-1)]]();}
  return GEN[topic]?GEN[topic]():genIp();
 }
-function buildQuestions(topic,count){
+function buildQuestions(topic,count,diff){
+ const d=DIFFS[diff]||0; // 0 = tous niveaux
+ const okd=q=>!d||q.diff===d;
  const m=new Map();
- const add=q=>{if(q&&!m.has(q.text))m.set(q.text,q);};
- shuffle(staticsOf(topic)).slice(0,Math.ceil(count/2)).forEach(add);
- let g=0;while(m.size<count&&g++<count*80)add(genOf(topic));
- if(m.size<count)shuffle(staticsOf(topic)).forEach(add);
+ const add=q=>{if(q&&okd(q)&&!m.has(q.text))m.set(q.text,q);};
+ shuffle(staticsOf(topic).filter(okd)).slice(0,Math.ceil(count/2)).forEach(add);
+ let g=0;while(m.size<count&&g++<count*200)add(genOf(topic));
+ if(m.size<count)shuffle(staticsOf(topic).filter(okd)).forEach(add);
+ // Filet de sécurité : si le pool d'un niveau est trop petit, on complète avec les autres niveaux.
+ if(m.size<count){
+  shuffle(staticsOf(topic)).forEach(q=>{if(m.size<count&&!m.has(q.text))m.set(q.text,q);});
+  let g2=0;while(m.size<count&&g2++<count*200){const q=genOf(topic);if(q&&!m.has(q.text))m.set(q.text,q);}
+ }
  return shuffle([...m.values()]).slice(0,count);
 }
 
@@ -211,29 +227,32 @@ const server=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'te
 const wss=new WebSocketServer({server});
 
 const players=new Map();
-let game=null,nextId=1;
+let game=null,nextId=1,hostId=null;
 
 const send=(ws,o)=>{if(ws.readyState===1)ws.send(JSON.stringify(o));};
 const broadcast=o=>{for(const ws of players.keys())send(ws,o);};
-const hostWs=()=>{for(const ws of players.keys())if(ws.readyState===1)return ws;return null;};
+// L'hôte est un joueur désigné (hostId). hostWs() le retrouve s'il est toujours connecté.
+const hostWs=()=>{for(const[ws,p]of players)if(p.id===hostId&&ws.readyState===1)return ws;return null;};
 const answered=()=>[...players.values()].filter(p=>p.answered).length;
 const board=()=>[...players.values()].sort((a,b)=>b.score-a.score).map(p=>({name:p.name,score:p.score,gain:p.gain||0,streak:p.streak}));
 
-function pushLobby(){const h=hostWs();for(const[ws,p]of players)send(ws,{t:'lobby',host:ws===h,inGame:!!game,players:[...players.values()].map(x=>({name:x.name}))});}
+function pushLobby(){const h=hostWs();for(const[ws,p]of players)send(ws,{t:'lobby',host:ws===h,hasHost:!!h,inGame:!!game,players:[...players.values()].map(x=>({name:x.name}))});}
 
-function startGame(topic,count){
-  const qs=buildQuestions(topic,count);
-  game={qs,idx:-1,topic};
+const DIFFLABEL={1:'Facile',2:'Moyen',3:'Difficile'};
+function startGame(topic,count,diff){
+  const qs=buildQuestions(topic,count,diff);
+  game={qs,idx:-1,topic,diff};
   for(const p of players.values()){p.score=0;p.streak=0;}
   nextQuestion();
 }
 function nextQuestion(){
+  if(!game)return;
   game.idx++;
   if(game.idx>=game.qs.length)return endGame();
   const q=game.qs[game.idx];
   game.qStart=Date.now();game.revealed=false;
   for(const p of players.values()){p.answered=false;p.ai=-1;p.at=0;p.gain=0;}
-  broadcast({t:'question',n:game.idx+1,total:game.qs.length,topic:BANK[q.topic][0],q:q.text,options:q.options,duration:DUR});
+  broadcast({t:'question',n:game.idx+1,total:game.qs.length,topic:BANK[q.topic][0],diff:DIFFLABEL[q.diff]||'',q:q.text,options:q.options,duration:DUR});
   game.timer=setTimeout(reveal,DUR*1000);
 }
 function reveal(){
@@ -246,19 +265,32 @@ function reveal(){
     else p.streak=0;
     p.gain=gain;p.score+=gain;p.lastOk=ok;
   }
-  for(const[ws,p]of players)send(ws,{t:'reveal',correct:q.correct,expl:q.expl,you:{ok:p.lastOk,gain:p.gain},board:board(),n:game.idx+1,total:game.qs.length,pause:PAUSE});
-  game.timer=setTimeout(nextQuestion,PAUSE*1000);
+  const h=hostWs();
+  // Pas d'enchaînement automatique : c'est l'hôte qui déclenche la question suivante (message 'next').
+  for(const[ws,p]of players)send(ws,{t:'reveal',correct:q.correct,correctText:q.options[q.correct],expl:q.expl,you:{ok:p.lastOk,gain:p.gain},board:board(),n:game.idx+1,total:game.qs.length,host:ws===h});
 }
 function endGame(){const h=hostWs();const b=board();for(const[ws,p]of players)send(ws,{t:'gameover',board:b,host:ws===h});game=null;}
 
-wss.on('connection',ws=>{
+const isLoopback=a=>!!a&&(a==='::1'||a==='127.0.0.1'||a.startsWith('::ffff:127.')||a.startsWith('127.'));
+wss.on('connection',(ws,req)=>{
+  // L'hôte = la machine qui héberge (connexion en loopback, ex. http://localhost) ou ?host=1.
+  ws._hostEligible=isLoopback(req.socket.remoteAddress)||/[?&]host=1\b/.test(req.url||'');
   ws.on('message',d=>{
     let m;try{m=JSON.parse(d);}catch(e){return;}
     if(m.t==='join'){
-      players.set(ws,{id:nextId++,name:(m.name||'Joueur').toString().slice(0,16)||'Joueur',score:0,streak:0,answered:false,ai:-1,at:0,gain:0});
+      if(players.has(ws))return; // déjà dans le lobby
+      const host=hostWs();
+      // On ne peut rejoindre que si un hôte est présent — sauf si on est soi-même l'hôte éligible (premier arrivé).
+      if(!host&&!ws._hostEligible){send(ws,{t:'nohost'});return;}
+      const id=nextId++;
+      players.set(ws,{id,name:(m.name||'Joueur').toString().slice(0,16)||'Joueur',score:0,streak:0,answered:false,ai:-1,at:0,gain:0});
+      if(hostId===null&&ws._hostEligible)hostId=id; // désigne l'hôte
       pushLobby();
     }else if(m.t==='start'){
-      if(ws===hostWs()&&!game){const c=[5,10,15].includes(m.count)?m.count:10;startGame(m.topic||'all',c);}
+      if(ws===hostWs()&&!game){const c=[5,10,15].includes(m.count)?m.count:10;const d=DIFFS[m.diff]?m.diff:'all';startGame(m.topic||'all',c,d);}
+    }else if(m.t==='next'){
+      // Seul l'hôte fait passer à la question suivante après le reveal.
+      if(ws===hostWs()&&game&&game.revealed)nextQuestion();
     }else if(m.t==='answer'){
       const p=players.get(ws);
       if(p&&game&&!game.revealed&&!p.answered){
@@ -268,7 +300,14 @@ wss.on('connection',ws=>{
       }
     }
   });
-  ws.on('close',()=>{players.delete(ws);if(game&&players.size===0){clearTimeout(game.timer);game=null;}pushLobby();});
+  ws.on('close',()=>{
+    const p=players.get(ws);
+    players.delete(ws);
+    // Si l'hôte part : on arrête la partie et le lobby attend qu'un hôte revienne.
+    if(p&&p.id===hostId){hostId=null;if(game){clearTimeout(game.timer);game=null;}}
+    if(players.size===0){if(game)clearTimeout(game.timer);game=null;hostId=null;}
+    pushLobby();
+  });
 });
 
 function lanIp(){const ifs=os.networkInterfaces();for(const k in ifs)for(const a of ifs[k])if(a.family==='IPv4'&&!a.internal)return a.address;return 'localhost';}

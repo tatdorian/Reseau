@@ -43,6 +43,8 @@
   /* play */
   .qtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
   .tag{font-family:var(--mono);font-size:.7rem;color:var(--ink);background:var(--teal);padding:3px 9px;border-radius:6px;font-weight:700;text-transform:uppercase}
+  .dtag{font-family:var(--mono);font-size:.7rem;padding:3px 9px;border-radius:6px;font-weight:700;text-transform:uppercase;margin-left:6px;border:1px solid var(--line)}
+  .dtag.d1{color:var(--green);border-color:var(--green)} .dtag.d2{color:var(--amber);border-color:var(--amber)} .dtag.d3{color:var(--red);border-color:var(--red)}
   .qn{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
   .timerwrap{display:flex;justify-content:center;margin:8px 0 4px}
   .ring{transform:rotate(-90deg)}
@@ -123,16 +125,25 @@
         <div><label>Questions</label>
           <select id="selCount"><option>5</option><option selected>10</option><option>15</option></select>
         </div>
+        <div><label>Niveau</label>
+          <select id="selDiff">
+            <option value="all">Tous niveaux</option>
+            <option value="facile">Facile</option>
+            <option value="moyen">Moyen</option>
+            <option value="difficile">Difficile</option>
+          </select>
+        </div>
       </div>
       <button class="btn" id="startBtn">Démarrer la partie</button>
     </div>
     <div id="guestCtrl" class="wait hidden">En attente que l'hôte lance la partie…</div>
+    <div id="noHostCtrl" class="wait hidden">En attente que l'hôte ouvre le lobby…</div>
     <div class="info">Partage l'adresse affichée dans ton terminal pour que tes potes rejoignent (même WiFi).</div>
   </div>
 
   <!-- PLAY -->
   <div class="card hidden" id="play">
-    <div class="qtop"><span class="tag" id="pTag">vlan</span><span class="qn" id="pQn">1 / 10</span></div>
+    <div class="qtop"><span><span class="tag" id="pTag">vlan</span><span class="dtag hidden" id="pDiff"></span></span><span class="qn" id="pQn">1 / 10</span></div>
     <div class="timerwrap">
       <svg class="ring" width="120" height="120" viewBox="0 0 120 120">
         <circle class="bg" cx="60" cy="60" r="52"></circle>
@@ -152,7 +163,8 @@
     <div class="rgain" id="rGain"></div>
     <div class="expl" id="rExpl"></div>
     <div class="lb" id="rLb"></div>
-    <div class="nextin" id="rNext"></div>
+    <button class="btn hidden" id="nextBtn">Question suivante</button>
+    <div id="rWait" class="wait hidden">En attente que l'hôte continue…</div>
   </div>
 
   <!-- OVER -->
@@ -170,43 +182,59 @@
 <script>
 const $=id=>document.getElementById(id);
 const C=2*Math.PI*52;
-let ws,phase="connecting",isHost=false,myName="",lastTopic="all",lastCount=10,timerInt=null;
+let ws,phase="connecting",isHost=false,myName="",lastTopic="all",lastCount=10,lastDiff="all",timerInt=null,joinName="",retryInt=null;
 
 function screen(name){phase=name;["join","lobby","play","reveal","over"].forEach(s=>$(s).classList.toggle("hidden",s!==name));window.scrollTo(0,0);}
 function esc(s){return s.replace(/`([^`]+)`/g,"<code>$1</code>");}
 
 function connect(){
-  ws=new WebSocket((location.protocol==="https:"?"wss":"ws")+"://"+location.host);
+  ws=new WebSocket((location.protocol==="https:"?"wss":"ws")+"://"+location.host+location.pathname+location.search);
   ws.onopen=()=>{$("foot").textContent="Connecté";};
   ws.onclose=()=>{$("foot").textContent="Déconnecté — recharge la page (F5)";};
   ws.onmessage=e=>handle(JSON.parse(e.data));
 }
 const send=o=>ws&&ws.readyState===1&&ws.send(JSON.stringify(o));
 
-$("joinBtn").onclick=()=>{const n=$("name").value.trim();if(!n)return $("name").focus();myName=n;send({t:"join",name:n});};
+$("joinBtn").onclick=()=>{const n=$("name").value.trim();if(!n)return $("name").focus();myName=n;joinName=n;send({t:"join",name:n});};
 $("name").addEventListener("keydown",e=>{if(e.key==="Enter")$("joinBtn").click();});
-$("startBtn").onclick=()=>{lastTopic=$("selTopic").value;lastCount=+$("selCount").value;send({t:"start",topic:lastTopic,count:lastCount});};
-$("replayBtn").onclick=()=>send({t:"start",topic:lastTopic,count:lastCount});
+$("startBtn").onclick=()=>{lastTopic=$("selTopic").value;lastCount=+$("selCount").value;lastDiff=$("selDiff").value;send({t:"start",topic:lastTopic,count:lastCount,diff:lastDiff});};
+$("replayBtn").onclick=()=>send({t:"start",topic:lastTopic,count:lastCount,diff:lastDiff});
+$("nextBtn").onclick=()=>{$("nextBtn").disabled=true;send({t:"next"});};
 
 function handle(m){
   if(m.t==="lobby"){
+    if(retryInt){clearInterval(retryInt);retryInt=null;}
     isHost=m.host;
     $("pcount").textContent=m.players.length;
     $("plist").innerHTML=m.players.map(p=>`<span class="ptag"><span class="d"></span>${escapeHtml(p.name)}</span>`).join("");
     $("hostCtrl").classList.toggle("hidden",!m.host);
-    $("guestCtrl").classList.toggle("hidden",m.host);
+    $("guestCtrl").classList.toggle("hidden",m.host||!m.hasHost);
+    $("noHostCtrl").classList.toggle("hidden",m.hasHost);
     if(phase==="connecting"||phase==="join"||phase==="lobby")screen("lobby");
   }
+  else if(m.t==="nohost"){showNoHost();}
   else if(m.t==="question"){clearInterval(timerInt);showQuestion(m);}
   else if(m.t==="progress"){$("pAns").textContent=`${m.answered} / ${m.total} ont répondu`;}
   else if(m.t==="reveal"){clearInterval(timerInt);showReveal(m);}
   else if(m.t==="gameover"){isHost=m.host;showOver(m);}
 }
 
+function showNoHost(){
+  $("hostCtrl").classList.add("hidden");
+  $("guestCtrl").classList.add("hidden");
+  $("noHostCtrl").classList.remove("hidden");
+  $("pcount").textContent=0;$("plist").innerHTML="";
+  screen("lobby");
+  if(!retryInt)retryInt=setInterval(()=>{if(joinName)send({t:"join",name:joinName});},2000);
+}
+
 let curOptions=[],myPick=-1;
 function showQuestion(m){
   curOptions=m.options;myPick=-1;
   $("pTag").textContent=m.topic;
+  const dn={Facile:1,Moyen:2,Difficile:3}[m.diff||""]||0;
+  const pd=$("pDiff");
+  if(dn){pd.textContent=m.diff;pd.className="dtag d"+dn;}else{pd.className="dtag hidden";}
   $("pQn").textContent=`${m.n} / ${m.total}`;
   $("pAns").textContent="0 réponse";
   $("pQ").innerHTML=esc(m.q);
@@ -234,11 +262,14 @@ function showReveal(m){
   $("rTitle").textContent=m.you.ok?"✓ Bonne réponse":(myPick<0?"⏱ Trop tard":"✗ Mauvaise réponse");
   $("rTitle").className="rev "+(m.you.ok?"ok":"no");
   $("rGain").textContent=m.you.gain>0?`+${m.you.gain} pts`:"+0 pt";
-  $("rExpl").innerHTML="<b>Réponse : "+"ABCD"[m.correct]+".</b> "+escapeHtml(m.expl);
+  $("rExpl").innerHTML="<b>Réponse : "+"ABCD"[m.correct]+(m.correctText?" — "+escapeHtml(m.correctText):"")+"</b><br>"+escapeHtml(m.expl);
   $("rLb").innerHTML=boardRows(m.board);
-  let left=m.pause;$("rNext").textContent=m.n>=m.total?"Résultats finaux…":`Question suivante dans ${left}s`;
+  const last=m.n>=m.total;
+  $("nextBtn").textContent=last?"Voir les résultats":"Question suivante";
+  $("nextBtn").disabled=false;
+  $("nextBtn").classList.toggle("hidden",!m.host);
+  $("rWait").classList.toggle("hidden",!!m.host);
   clearInterval(timerInt);
-  timerInt=setInterval(()=>{left--;if(left<=0){clearInterval(timerInt);}else $("rNext").textContent=m.n>=m.total?"Résultats finaux…":`Question suivante dans ${left}s`;},1000);
   screen("reveal");
 }
 function boardRows(board){
