@@ -40,4 +40,7 @@ Tes potes : http://192.168.1.42:3000   (meme WiFi)
 - Reglage dans `server.js` en haut : `DUR` (duree par question, 30 s). Le passage a la question suivante est desormais declenche manuellement par l'hote.
 - Niveaux de difficulte : les questions (rediges + generees, alignees CCNA) sont taggees Facile / Moyen / Difficile et filtrees selon le choix de l'hote. Si un niveau a trop peu de questions pour le total demande, le pool est complete avec les autres niveaux.
 - Anti-repetition : les questions du questionnaire precedent sont evitees au tirage suivant, donc ca change a chaque partie.
-- Profil / Passe de combat : chaque joueur gagne de l'XP (= son score) a la fin de chaque partie, monte de niveau et debloque des avatars. La progression est sauvegardee dans le navigateur (localStorage), sans compte. Bouton "Profil · Passe de combat" sur l'ecran d'accueil et dans le lobby ; l'avatar choisi s'affiche a cote du pseudo, dans le classement et sur le podium.
+- Profil / Passe de combat : chaque joueur gagne de l'XP (= son score) a la fin de chaque partie, monte de niveau et debloque des recompenses. La progression est sauvegardee dans le navigateur (localStorage), sans compte. Bouton "Profil · Passe de combat" sur l'ecran d'accueil et dans le lobby. Recompenses :
+  - Avatars (emoji) affiches a cote du pseudo, dans le classement et sur le podium ;
+  - Titres affiches sous/a cote du pseudo (ex. "Maitre du subnetting", "Legende du CCNA") ;
+  - Themes de couleur qui changent l'accent de l'interface (cosmetique locale).

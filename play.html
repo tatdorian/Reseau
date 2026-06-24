@@ -109,7 +109,22 @@
   .avitem.sel{border-color:var(--teal);box-shadow:inset 0 0 0 2px var(--teal)}
   .avitem.lock{opacity:.35;cursor:not-allowed;filter:grayscale(1)}
   .avitem .req{font-size:.52rem;font-family:var(--mono);color:var(--muted)}
+  .ttllist{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+  .ttlitem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;
+    background:var(--surface2);border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600}
+  .ttlitem:hover{border-color:var(--teal)}
+  .ttlitem.sel{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}
+  .ttlitem.lock{opacity:.4;cursor:not-allowed}
+  .ttlitem .req{font-family:var(--mono);font-size:.65rem;color:var(--muted);font-weight:400}
+  .thlist{display:flex;flex-wrap:wrap;gap:14px 10px;margin:10px 0 6px}
+  .thitem{width:40px;height:40px;border-radius:10px;cursor:pointer;border:2px solid transparent;position:relative;
+    display:flex;align-items:center;justify-content:center}
+  .thitem.sel{border-color:#fff}
+  .thitem.lock{opacity:.4;cursor:not-allowed}
+  .thitem .req{position:absolute;bottom:-13px;left:0;right:0;text-align:center;font-size:.55rem;font-family:var(--mono);color:var(--muted)}
   .levelup{text-align:center;color:var(--amber);font-family:var(--mono);font-weight:700;margin:8px 0 2px}
+  .ttl{display:block;font-weight:400;font-size:.7rem;color:var(--muted);font-family:var(--mono)}
+  .ptag .ttl{display:inline;margin-left:4px}
   @media(max-width:480px){.avgrid{grid-template-columns:repeat(4,1fr)}}
 
   footer{text-align:center;color:var(--muted);font-size:.72rem;margin-top:18px;font-family:var(--mono)}
@@ -124,7 +139,7 @@
   <div class="card" id="join">
     <h2>Rejoindre la partie</h2>
     <p class="dim">Choisis un pseudo pour entrer dans le lobby.</p>
-    <div class="me-head" id="meHead"><span class="ava" id="meAva">🙂</span><span class="who">Niveau <b id="meLvl">1</b> · ton avatar</span></div>
+    <div class="me-head" id="meHead"><span class="ava" id="meAva">🙂</span><span class="who">Niveau <b id="meLvl">1</b><span class="ttl" id="meTtl"></span></span></div>
     <input id="name" placeholder="Ton pseudo" maxlength="16" autofocus>
     <button class="btn" id="joinBtn">Rejoindre</button>
     <button class="btn alt" id="profBtnJoin">🎖️ Profil · Passe de combat</button>
@@ -176,8 +191,12 @@
       <div class="bpbar"><div class="bpfill" id="bpFill"></div></div>
       <div class="bpxp" id="bpXp">0 / 2500 XP</div>
     </div>
-    <p class="dim">Choisis ton avatar :</p>
+    <p class="dim">Avatar :</p>
     <div class="avgrid" id="avGrid"></div>
+    <p class="dim">Titre :</p>
+    <div class="ttllist" id="ttlList"></div>
+    <p class="dim">Thème de couleur :</p>
+    <div class="thlist" id="thList"></div>
     <button class="btn" id="profBack">Retour</button>
   </div>
 
@@ -237,11 +256,26 @@ const AVATARS=[
   {e:"⚡",lvl:9},{e:"🔥",lvl:10},{e:"💎",lvl:12},{e:"👑",lvl:14},{e:"🏆",lvl:16}
 ];
 const LEVEL_XP=2500;
+const TITLES=[
+  {t:"",name:"(aucun)",lvl:1},{t:"Recrue",lvl:1},{t:"Apprenti réseau",lvl:2},
+  {t:"Technicien LAN",lvl:3},{t:"Admin VLAN",lvl:5},{t:"Maître du subnetting",lvl:7},
+  {t:"Routeur humain",lvl:9},{t:"Gourou OSPF",lvl:11},{t:"Architecte réseau",lvl:13},
+  {t:"Légende du CCNA",lvl:16}
+];
+const THEMES=[
+  {id:"teal",name:"Sarcelle",lvl:1,c:"#5EEAD4"},{id:"blue",name:"Océan",lvl:1,c:"#60A5FA"},
+  {id:"green",name:"Émeraude",lvl:2,c:"#4ADE80"},{id:"amber",name:"Ambre",lvl:4,c:"#FBBF24"},
+  {id:"purple",name:"Améthyste",lvl:6,c:"#A78BFA"},{id:"red",name:"Rubis",lvl:8,c:"#F87171"},
+  {id:"pink",name:"Magenta",lvl:10,c:"#F472B6"},{id:"gold",name:"Or",lvl:14,c:"#FACC15"}
+];
 let myXP=+(localStorage.getItem("qr_xp")||0)||0;
 let myAvatar=localStorage.getItem("qr_avatar")||"🙂";
+let myTitle=localStorage.getItem("qr_title")||"";
+let myThemeId=localStorage.getItem("qr_theme")||"teal";
 const levelFromXP=xp=>Math.floor(xp/LEVEL_XP)+1;
-function saveBP(){localStorage.setItem("qr_xp",myXP);localStorage.setItem("qr_avatar",myAvatar);}
-function updateMeHead(){$("meAva").textContent=myAvatar;$("meLvl").textContent=levelFromXP(myXP);}
+function saveBP(){localStorage.setItem("qr_xp",myXP);localStorage.setItem("qr_avatar",myAvatar);localStorage.setItem("qr_title",myTitle);localStorage.setItem("qr_theme",myThemeId);}
+function applyTheme(){const tm=THEMES.find(t=>t.id===myThemeId)||THEMES[0];document.documentElement.style.setProperty("--teal",tm.c);}
+function updateMeHead(){$("meAva").textContent=myAvatar;$("meLvl").textContent=levelFromXP(myXP);$("meTtl").textContent=myTitle||"";}
 let profileReturn="join";
 function openProfile(){profileReturn=(phase==="lobby")?"lobby":"join";renderProfile();screen("profile");}
 function closeProfile(){screen(profileReturn);}
@@ -250,6 +284,7 @@ function renderProfile(){
   $("bpLvl").textContent=lvl;
   $("bpFill").style.width=(into/LEVEL_XP*100)+"%";
   $("bpXp").textContent=into+" / "+LEVEL_XP+" XP  ·  total "+myXP+" XP";
+  // Avatars
   const g=$("avGrid");g.innerHTML="";
   AVATARS.forEach(a=>{
     const unlocked=lvl>=a.lvl;
@@ -258,6 +293,27 @@ function renderProfile(){
     d.innerHTML=`<span>${a.e}</span>`+(unlocked?"":`<span class="req">Niv ${a.lvl}</span>`);
     if(unlocked)d.onclick=()=>{myAvatar=a.e;saveBP();updateMeHead();renderProfile();send({t:"avatar",avatar:myAvatar});};
     g.appendChild(d);
+  });
+  // Titres
+  const tl=$("ttlList");tl.innerHTML="";
+  TITLES.forEach(it=>{
+    const unlocked=lvl>=it.lvl;
+    const d=document.createElement("div");
+    d.className="ttlitem"+(unlocked?"":" lock")+(it.t===myTitle?" sel":"");
+    d.innerHTML=`<span>${escapeHtml(it.name||it.t)}</span>`+(unlocked?"":`<span class="req">Niv ${it.lvl}</span>`);
+    if(unlocked)d.onclick=()=>{myTitle=it.t;saveBP();updateMeHead();renderProfile();send({t:"title",title:myTitle});};
+    tl.appendChild(d);
+  });
+  // Thèmes de couleur (cosmétique locale)
+  const th=$("thList");th.innerHTML="";
+  THEMES.forEach(tm=>{
+    const unlocked=lvl>=tm.lvl;
+    const d=document.createElement("div");
+    d.className="thitem"+(unlocked?"":" lock")+(tm.id===myThemeId?" sel":"");
+    d.style.background=tm.c;d.title=tm.name;
+    if(!unlocked)d.innerHTML=`<span class="req">Niv ${tm.lvl}</span>`;
+    if(unlocked)d.onclick=()=>{myThemeId=tm.id;applyTheme();saveBP();renderProfile();};
+    th.appendChild(d);
   });
 }
 
@@ -269,7 +325,7 @@ function connect(){
 }
 const send=o=>ws&&ws.readyState===1&&ws.send(JSON.stringify(o));
 
-$("joinBtn").onclick=()=>{const n=$("name").value.trim();if(!n)return $("name").focus();myName=n;joinName=n;send({t:"join",name:n,avatar:myAvatar});};
+$("joinBtn").onclick=()=>{const n=$("name").value.trim();if(!n)return $("name").focus();myName=n;joinName=n;send({t:"join",name:n,avatar:myAvatar,title:myTitle});};
 $("name").addEventListener("keydown",e=>{if(e.key==="Enter")$("joinBtn").click();});
 $("profBtnJoin").onclick=openProfile;
 $("profBtnLobby").onclick=openProfile;
@@ -285,7 +341,7 @@ function handle(m){
     if(retryInt){clearInterval(retryInt);retryInt=null;}
     isHost=m.host;
     $("pcount").textContent=m.players.length;
-    $("plist").innerHTML=m.players.map(p=>`<span class="ptag"><span class="d"></span>${p.avatar?escapeHtml(p.avatar)+" ":""}${escapeHtml(p.name)}</span>`).join("");
+    $("plist").innerHTML=m.players.map(p=>`<span class="ptag"><span class="d"></span>${p.avatar?escapeHtml(p.avatar)+" ":""}${escapeHtml(p.name)}${p.title?`<span class="ttl">${escapeHtml(p.title)}</span>`:""}</span>`).join("");
     $("hostCtrl").classList.toggle("hidden",!m.host);
     $("guestCtrl").classList.toggle("hidden",m.host||!m.hasHost);
     $("noHostCtrl").classList.toggle("hidden",m.hasHost);
@@ -305,7 +361,7 @@ function showNoHost(){
   $("noHostCtrl").classList.remove("hidden");
   $("pcount").textContent=0;$("plist").innerHTML="";
   screen("lobby");
-  if(!retryInt)retryInt=setInterval(()=>{if(joinName)send({t:"join",name:joinName});},2000);
+  if(!retryInt)retryInt=setInterval(()=>{if(joinName)send({t:"join",name:joinName,avatar:myAvatar,title:myTitle});},2000);
 }
 
 let curOptions=[],myPick=-1;
@@ -355,7 +411,7 @@ function showReveal(m){
 }
 function boardRows(board){
   return board.map((p,i)=>{const me=p.name===myName?" me":"";const st=p.streak>=2?` 🔥${p.streak}`:"";
-    return `<div class="lbr${me}"><span class="rk">${i+1}</span><span class="nm">${p.avatar?escapeHtml(p.avatar)+" ":""}${escapeHtml(p.name)}${st}</span>${p.gain>0?`<span class="pg">+${p.gain}</span>`:'<span class="pg"></span>'}<span class="sc">${p.score}</span></div>`;}).join("");
+    return `<div class="lbr${me}"><span class="rk">${i+1}</span><span class="nm">${p.avatar?escapeHtml(p.avatar)+" ":""}${escapeHtml(p.name)}${st}${p.title?`<span class="ttl">${escapeHtml(p.title)}</span>`:""}</span>${p.gain>0?`<span class="pg">+${p.gain}</span>`:'<span class="pg"></span>'}<span class="sc">${p.score}</span></div>`;}).join("");
 }
 
 function showOver(m){
@@ -364,7 +420,7 @@ function showOver(m){
   order.forEach(pos=>{if(!top[pos])return;const p=top[pos],rank=pos+1;
     const d=document.createElement("div");d.className="pod";
     d.innerHTML=`<div class="av av${rank}">${p.avatar?escapeHtml(p.avatar):escapeHtml((p.name[0]||"?").toUpperCase())}</div>
-      <div class="nm">${escapeHtml(p.name)}</div><div class="sc">${p.score} pts</div>
+      <div class="nm">${escapeHtml(p.name)}</div>${p.title?`<div class="ttl">${escapeHtml(p.title)}</div>`:""}<div class="sc">${p.score} pts</div>
       <div class="bar b${rank}">${rank===1?"🏆":rank}</div>`;
     pod.appendChild(d);});
   // XP du passe de combat pour le joueur local
@@ -382,6 +438,7 @@ function showOver(m){
 }
 
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+applyTheme();
 updateMeHead();
 connect();
 </script>

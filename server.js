@@ -241,9 +241,9 @@ const broadcast=o=>{for(const ws of players.keys())send(ws,o);};
 // L'hôte est un joueur désigné (hostId). hostWs() le retrouve s'il est toujours connecté.
 const hostWs=()=>{for(const[ws,p]of players)if(p.id===hostId&&ws.readyState===1)return ws;return null;};
 const answered=()=>[...players.values()].filter(p=>p.answered).length;
-const board=()=>[...players.values()].sort((a,b)=>b.score-a.score).map(p=>({name:p.name,avatar:p.avatar||'',score:p.score,gain:p.gain||0,streak:p.streak}));
+const board=()=>[...players.values()].sort((a,b)=>b.score-a.score).map(p=>({name:p.name,avatar:p.avatar||'',title:p.title||'',score:p.score,gain:p.gain||0,streak:p.streak}));
 
-function pushLobby(){const h=hostWs();for(const[ws,p]of players)send(ws,{t:'lobby',host:ws===h,hasHost:!!h,inGame:!!game,players:[...players.values()].map(x=>({name:x.name,avatar:x.avatar||''}))});}
+function pushLobby(){const h=hostWs();for(const[ws,p]of players)send(ws,{t:'lobby',host:ws===h,hasHost:!!h,inGame:!!game,players:[...players.values()].map(x=>({name:x.name,avatar:x.avatar||'',title:x.title||''}))});}
 
 const DIFFLABEL={1:'Facile',2:'Moyen',3:'Difficile'};
 function startGame(topic,count,diff){
@@ -290,12 +290,15 @@ wss.on('connection',(ws,req)=>{
       // On ne peut rejoindre que si un hôte est présent — sauf si on est soi-même l'hôte éligible (premier arrivé).
       if(!host&&!ws._hostEligible){send(ws,{t:'nohost'});return;}
       const id=nextId++;
-      players.set(ws,{id,name:(m.name||'Joueur').toString().slice(0,16)||'Joueur',avatar:(m.avatar||'').toString().slice(0,8),score:0,streak:0,answered:false,ai:-1,at:0,gain:0});
+      players.set(ws,{id,name:(m.name||'Joueur').toString().slice(0,16)||'Joueur',avatar:(m.avatar||'').toString().slice(0,8),title:(m.title||'').toString().slice(0,24),score:0,streak:0,answered:false,ai:-1,at:0,gain:0});
       if(hostId===null&&ws._hostEligible)hostId=id; // désigne l'hôte
       pushLobby();
     }else if(m.t==='avatar'){
       const p=players.get(ws);
       if(p){p.avatar=(m.avatar||'').toString().slice(0,8);pushLobby();}
+    }else if(m.t==='title'){
+      const p=players.get(ws);
+      if(p){p.title=(m.title||'').toString().slice(0,24);pushLobby();}
     }else if(m.t==='start'){
       if(ws===hostWs()&&!game){const c=[5,10,15].includes(m.count)?m.count:10;const d=DIFFS[m.diff]?m.diff:'all';startGame(m.topic||'all',c,d);}
     }else if(m.t==='next'){
