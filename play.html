@@ -47,6 +47,7 @@
   .tag{font-family:var(--mono);font-size:.7rem;color:var(--ink);background:var(--teal);padding:3px 9px;border-radius:6px;font-weight:700;text-transform:uppercase}
   .dtag{font-family:var(--mono);font-size:.7rem;padding:3px 9px;border-radius:6px;font-weight:700;text-transform:uppercase;margin-left:6px;border:1px solid var(--line)}
   .dtag.d1{color:var(--green);border-color:var(--green)} .dtag.d2{color:var(--amber);border-color:var(--amber)} .dtag.d3{color:var(--red);border-color:var(--red)}
+  .dtag.d4{color:var(--purple);border-color:var(--purple)}
   .qn{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
   .timerwrap{display:flex;justify-content:center;margin:8px 0 4px}
   .ring{transform:rotate(-90deg)}
@@ -70,7 +71,14 @@
   .rev.ok{color:var(--green)} .rev.no{color:var(--red)}
   .rgain{font-family:var(--mono);color:var(--teal);font-weight:700;margin-bottom:10px}
   .expl{background:var(--surface2);border-left:3px solid var(--teal);border-radius:9px;padding:12px 14px;
-    font-size:.88rem;color:var(--text);margin-bottom:16px;text-align:left}
+    font-size:.88rem;color:var(--text);margin-bottom:14px;text-align:left}
+  .pickhd{font-family:var(--mono);font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+  .picks{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+  .pick{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:.84rem;font-weight:600;
+    padding:7px 10px;border-radius:8px;background:var(--surface2);border-left:3px solid var(--muted)}
+  .pick.ok{border-left-color:var(--green)} .pick.bad{border-left-color:var(--red)} .pick.no{border-left-color:var(--muted);opacity:.65}
+  .pick .ans{font-family:var(--mono);font-size:.76rem;font-weight:400;color:var(--muted);text-align:right}
+  .pick.ok .ans{color:var(--green)} .pick.bad .ans{color:var(--red)}
   .lb{border-top:1px solid var(--line)}
   .lbr{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:.9rem}
   .lbr .rk{font-family:var(--mono);color:var(--muted);width:22px;text-align:right}
@@ -171,6 +179,7 @@
             <option value="facile">Facile</option>
             <option value="moyen">Moyen</option>
             <option value="difficile">Difficile</option>
+            <option value="expert">Expert 💀</option>
           </select>
         </div>
       </div>
@@ -221,6 +230,8 @@
     <div class="rev" id="rTitle">Correct</div>
     <div class="rgain" id="rGain"></div>
     <div class="expl" id="rExpl"></div>
+    <div class="pickhd" id="rPickHd">Réponses des joueurs</div>
+    <div class="picks" id="rPicks"></div>
     <div class="lb" id="rLb"></div>
     <button class="btn hidden" id="nextBtn">Question suivante</button>
     <button class="btn alt hidden" id="revMenuBtn">Menu</button>
@@ -368,7 +379,7 @@ let curOptions=[],myPick=-1;
 function showQuestion(m){
   curOptions=m.options;myPick=-1;
   $("pTag").textContent=m.topic;
-  const dn={Facile:1,Moyen:2,Difficile:3}[m.diff||""]||0;
+  const dn={Facile:1,Moyen:2,Difficile:3,Expert:4}[m.diff||""]||0;
   const pd=$("pDiff");
   if(dn){pd.textContent=m.diff;pd.className="dtag d"+dn;}else{pd.className="dtag hidden";}
   $("pQn").textContent=`${m.n} / ${m.total}`;
@@ -399,6 +410,14 @@ function showReveal(m){
   $("rTitle").className="rev "+(m.you.ok?"ok":"no");
   $("rGain").textContent=m.you.gain>0?`+${m.you.gain} pts`:"+0 pt";
   $("rExpl").innerHTML="<b>Réponse : "+"ABCD"[m.correct]+(m.correctText?" — "+escapeHtml(m.correctText):"")+"</b><br>"+escapeHtml(m.expl);
+  // Réponses de chaque joueur
+  const picks=m.picks||[];
+  $("rPickHd").style.display=picks.length?"":"none";
+  $("rPicks").innerHTML=picks.map(p=>{
+    const cls=p.ai<0?"no":(p.ok?"ok":"bad");
+    const ans=p.ai<0?"pas de réponse":("ABCD"[p.ai]+". "+escapeHtml(p.text));
+    return `<div class="pick ${cls}"><span>${p.avatar?escapeHtml(p.avatar)+" ":""}${escapeHtml(p.name)}</span><span class="ans">${ans}</span></div>`;
+  }).join("");
   $("rLb").innerHTML=boardRows(m.board);
   const last=m.n>=m.total;
   $("nextBtn").textContent=last?"Voir les résultats":"Question suivante";

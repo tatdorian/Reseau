@@ -372,7 +372,7 @@ function genOsi(){
 }
 
 const GEN={vlan:genVlan,routage:genRoutage,ip:genIp,osi:genOsi,acl:genAcl};
-const DIFFS={facile:1,moyen:2,difficile:3};
+const DIFFS={facile:1,moyen:2,difficile:3,expert:4};
 // Niveau (1=facile, 2=moyen, 3=difficile) de chaque question rédigée de BANK, dans l'ordre.
 const SDIFF={
  vlan:    [1,1,3,2,2,2,2,1,2,3,2,1,2,1,1,2,3,2],
@@ -387,7 +387,7 @@ function staticsOf(topic){
  const map=k=>BANK[k][1].map((q,i)=>mk(k,q[0],q[1],q[2],q[3],(SDIFF[k]&&SDIFF[k][i])||2));
  const hard=k=>(HARD[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],3));
  const more=k=>(MORE[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],q[4]||2));
- const expert=k=>(EXPERT[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],3));
+ const expert=k=>(EXPERT[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],4));
  if(topic==='all'){let o=[];for(const k in BANK)o=o.concat(map(k),hard(k),more(k),expert(k));return o;}
  return BANK[topic]?map(topic).concat(hard(topic),more(topic),expert(topic)):[];
 }
@@ -399,20 +399,23 @@ let recentQ=new Set(); // questions du questionnaire précédent, pour ne pas le
 function buildQuestions(topic,count,diff){
  const d=DIFFS[diff]||0; // 0 = tous niveaux
  const okd=q=>!d||q.diff===d;
+ const themes=topic==='all'?Object.keys(BANK):[topic]; // round-robin pour couvrir tous les thèmes
  const m=new Map();
- // Passe 1 : on évite les questions déjà tombées au questionnaire précédent.
- const addNew=q=>{if(q&&okd(q)&&!m.has(q.text)&&!recentQ.has(q.text))m.set(q.text,q);};
- shuffle(staticsOf(topic).filter(q=>okd(q)&&!recentQ.has(q.text))).slice(0,Math.ceil(count/2)).forEach(addNew);
- let g0=0;while(m.size<count&&g0++<count*300)addNew(genOf(topic));
- // Passe 2 : si besoin, on réautorise les questions récentes (même niveau).
- const add=q=>{if(q&&okd(q)&&!m.has(q.text))m.set(q.text,q);};
- if(m.size<count)shuffle(staticsOf(topic).filter(okd)).forEach(add);
- let g=0;while(m.size<count&&g++<count*200)add(genOf(topic));
- // Filet de sécurité : si le pool d'un niveau est trop petit, on complète avec les autres niveaux.
- if(m.size<count){
-  shuffle(staticsOf(topic)).forEach(q=>{if(m.size<count&&!m.has(q.text))m.set(q.text,q);});
-  let g2=0;while(m.size<count&&g2++<count*200){const q=genOf(topic);if(q&&!m.has(q.text))m.set(q.text,q);}
- }
+ // 1) Round-robin des questions rédigées entre thèmes (variété + on évite les récentes).
+ const stat={},pos={};
+ for(const t of themes){stat[t]=shuffle(staticsOf(t).filter(q=>okd(q)&&!recentQ.has(q.text)));pos[t]=0;}
+ let progress=true;
+ while(m.size<count&&progress){progress=false;
+  for(const t of themes){if(m.size>=count)break;
+   while(pos[t]<stat[t].length){const q=stat[t][pos[t]++];if(!m.has(q.text)){m.set(q.text,q);progress=true;break;}}}}
+ // 2) Round-robin des questions générées (mêmes thèmes, même niveau, non récentes).
+ let g=0;
+ while(m.size<count&&g++<count*200){for(const t of themes){if(m.size>=count)break;
+   const q=genOf(t);if(q&&okd(q)&&!m.has(q.text)&&!recentQ.has(q.text))m.set(q.text,q);}}
+ // 3) Filet de sécurité : on réautorise les récentes, puis on complète tous niveaux confondus.
+ if(m.size<count)for(const t of themes)shuffle(staticsOf(t).filter(okd)).forEach(q=>{if(m.size<count&&!m.has(q.text))m.set(q.text,q);});
+ if(m.size<count)for(const t of themes)shuffle(staticsOf(t)).forEach(q=>{if(m.size<count&&!m.has(q.text))m.set(q.text,q);});
+ let g2=0;while(m.size<count&&g2++<count*200){const t=themes[g2%themes.length];const q=genOf(t);if(q&&!m.has(q.text))m.set(q.text,q);}
  const out=shuffle([...m.values()]).slice(0,count);
  recentQ=new Set(out.map(q=>q.text)); // mémorise pour le prochain questionnaire
  return out;
@@ -434,7 +437,7 @@ const board=()=>[...players.values()].sort((a,b)=>b.score-a.score).map(p=>({name
 
 function pushLobby(){const h=hostWs();for(const[ws,p]of players)send(ws,{t:'lobby',host:ws===h,hasHost:!!h,inGame:!!game,players:[...players.values()].map(x=>({name:x.name,avatar:x.avatar||'',title:x.title||''}))});}
 
-const DIFFLABEL={1:'Facile',2:'Moyen',3:'Difficile'};
+const DIFFLABEL={1:'Facile',2:'Moyen',3:'Difficile',4:'Expert'};
 function startGame(topic,count,diff){
   const qs=buildQuestions(topic,count,diff);
   game={qs,idx:-1,topic,diff};
@@ -462,8 +465,10 @@ function reveal(){
     p.gain=gain;p.score+=gain;p.lastOk=ok;
   }
   const h=hostWs();
+  // Ce que chaque joueur a répondu (pour l'affichage au reveal).
+  const picks=[...players.values()].map(p=>{const a=(p.answered&&p.ai>=0)?p.ai:-1;return{name:p.name,avatar:p.avatar||'',ai:a,text:a>=0?q.options[a]:'',ok:a===q.correct};});
   // Pas d'enchaînement automatique : c'est l'hôte qui déclenche la question suivante (message 'next').
-  for(const[ws,p]of players)send(ws,{t:'reveal',correct:q.correct,correctText:q.options[q.correct],expl:q.expl,you:{ok:p.lastOk,gain:p.gain},board:board(),n:game.idx+1,total:game.qs.length,host:ws===h});
+  for(const[ws,p]of players)send(ws,{t:'reveal',correct:q.correct,correctText:q.options[q.correct],expl:q.expl,you:{ok:p.lastOk,gain:p.gain},picks,board:board(),n:game.idx+1,total:game.qs.length,host:ws===h});
 }
 function endGame(){const h=hostWs();const b=board();for(const[ws,p]of players)send(ws,{t:'gameover',board:b,host:ws===h});game=null;}
 
