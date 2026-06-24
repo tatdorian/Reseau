@@ -224,6 +224,70 @@ const MORE={
  ],
 };
 
+// Questions EXPERT (niveau difficile pur) : calculs multi-étapes et scénarios pointus CCNA 200-301.
+const EXPERT={
+ vlan:[
+  ["Selon la table de coûts STP courte (IEEE 802.1D), quel est le coût d'un lien Gigabit Ethernet ?",["4","19","2","100"],0,"Coûts courts STP : 10 Gbps = 2, 1 Gbps = 4, 100 Mbps = 19, 10 Mbps = 100.",3],
+  ["Coûts cumulés vers le root bridge : Fa0/1 = 19, Gi0/1 = 8, Gi0/2 = 12. Quel port devient root port ?",["Gi0/1","Gi0/2","Fa0/1","Aucun"],0,"Le root port est celui de plus faible coût cumulé vers le root : Gi0/1 (8).",3],
+  ["Avec LACP, quelles combinaisons de modes forment un EtherChannel ?",["active-active ou active-passive","passive-passive","on-active","auto-desirable"],0,"LACP exige au moins un côté active ; passive-passive ne négocie jamais. on et auto/desirable relèvent d'autres modes.",3],
+  ["Quelle paire de modes DTP ne forme PAS de trunk ?",["dynamic auto / dynamic auto","trunk / dynamic auto","dynamic desirable / dynamic auto","trunk / trunk"],0,"Deux ports en dynamic auto attendent passivement : aucun trunk ne se forme.",3],
+  ["Quelle commande globale active BPDU Guard sur tous les ports PortFast ?",["spanning-tree portfast bpduguard default","spanning-tree bpduguard enable","spanning-tree portfast default","bpduguard all"],0,"spanning-tree portfast bpduguard default applique BPDU Guard à tous les ports PortFast.",3],
+  ["Quelle commande force un switch à devenir root primaire pour le VLAN 10 ?",["spanning-tree vlan 10 root primary","spanning-tree vlan 10 priority 32768","spanning-tree root vlan 10","set spanning-tree root 10"],0,"root primary abaisse la priorité (24576 ou moins) pour gagner l'élection du root bridge.",3],
+  ["Bonne pratique pour sécuriser le VLAN natif d'un trunk ?",["L'affecter à un VLAN inutilisé et taguer le natif (vlan dot1q tag native)","Le laisser en VLAN 1","Le mettre dans le VLAN de management","Le désactiver"],0,"Mettre le natif sur un VLAN inutilisé et le taguer contre-mesure le VLAN hopping par double tagging.",3],
+  ["Un téléphone IP et un PC partagent un port. Pourquoi configurer `switchport port-security maximum 2` ?",["Pour autoriser la MAC du PC et celle du téléphone","Pour doubler la bande passante","Pour activer le trunk","Pour créer deux VLAN natifs"],0,"Le port voit deux MAC (PC + téléphone via voice VLAN) ; le maximum doit donc valoir 2.",3],
+  ["Un EtherChannel reste down : les ports membres ont des listes de VLAN autorisés différentes. Cause ?",["Incohérence de configuration entre membres du bundle","MTU trop élevé","VLAN natif identique","Câble croisé"],0,"Tous les membres d'un EtherChannel doivent avoir une config identique (mode, VLAN autorisés, natif), sinon le bundle ne monte pas.",3],
+  ["Quelle est la différence d'états de port entre STP (802.1D) et RSTP (802.1w) ?",["STP a 5 états (dont blocking/listening), RSTP en a 3 (discarding/learning/forwarding)","RSTP a plus d'états que STP","Ils ont les mêmes états","RSTP n'a pas d'état forwarding"],0,"RSTP fusionne disabled/blocking/listening en un seul état discarding.",3],
+ ],
+ routage:[
+  ["Référence OSPF par défaut (100 Mbps). Un chemin traverse trois liens Gigabit en série. Coût OSPF total ?",["3","1","30","300"],0,"Coût d'un lien Gig = 10^8/10^9 = 0,1 arrondi au minimum 1 ; trois liens → 3.",3],
+  ["Avec la reference-bandwidth par défaut (100 Mbps), quel problème pose un lien 10 Gbps ?",["Son coût vaut 1, comme un lien 100 Mbps ou Gigabit : OSPF ne distingue plus les hauts débits","Son coût est négatif","OSPF refuse l'interface","Le coût devient 10000"],0,"10^8/10^10 < 1 → arrondi à 1, identique aux liens ≥ 100 Mbps. D'où l'intérêt d'augmenter la reference-bandwidth.",3],
+  ["Quelles métriques EIGRP sont utilisées par défaut (valeurs K) ?",["Bande passante et délai (K1=1, K3=1)","Sauts uniquement","Charge et fiabilité","Coût comme OSPF"],0,"Par défaut EIGRP n'utilise que bande passante (K1) et délai (K3).",3],
+  ["Quelle est la condition de faisabilité (FC) en EIGRP ?",["La distance reportée du voisin (RD) est inférieure à la distance faisable (FD) du successor","La RD est supérieure à la FD","Les métriques sont égales","Le voisin a la plus haute IP"],0,"Un feasible successor doit avoir une RD < FD du successor, garantissant l'absence de boucle.",3],
+  ["Quel type de LSA un ABR génère-t-il pour annoncer des réseaux d'une autre aire ?",["Type 3 (Summary LSA)","Type 1 (Router LSA)","Type 2 (Network LSA)","Type 5 (External LSA)"],0,"L'ABR émet des LSA de type 3 (Summary) pour propager les routes inter-aires.",3],
+  ["Dans une aire stub OSPF, quels LSA sont bloqués ?",["Les LSA externes de type 5 (remplacés par une route par défaut)","Les LSA de type 1","Les LSA de type 2","Aucun"],0,"Une aire stub n'accepte pas les type 5 ; l'ABR y injecte une route par défaut à la place.",3],
+  ["Résumé le plus précis couvrant 192.168.0.0/24 à 192.168.3.0/24 ?",["192.168.0.0/22","192.168.0.0/23","192.168.0.0/21","192.168.0.0/24"],0,"Quatre /24 contigus (0–3) s'agrègent en un /22.",3],
+  ["Résumé couvrant 10.0.0.0/16, 10.1.0.0/16, 10.2.0.0/16 et 10.3.0.0/16 ?",["10.0.0.0/14","10.0.0.0/15","10.0.0.0/16","10.0.0.0/13"],0,"Quatre /16 contigus (0–3) s'agrègent en un /14.",3],
+  ["Distance administrative d'une route eBGP ?",["20","200","110","1"],0,"eBGP = 20 (préféré à l'IGP), iBGP = 200.",3],
+  ["AD d'une route OSPF inter-aires comparée à une route OSPF externe E2 ?",["Les deux valent 110","Inter-aires 110, externe 150","Inter-aires 110, externe 20","Externe 110, inter-aires 200"],0,"Toutes les routes OSPF (intra, inter, externes) ont une AD de 110 par défaut.",3],
+ ],
+ ip:[
+  ["Plus petit résumé couvrant 172.16.8.0/24 à 172.16.15.0/24 ?",["172.16.8.0/21","172.16.8.0/20","172.16.8.0/22","172.16.0.0/21"],0,"Huit /24 contigus (8–15) s'agrègent en un /21.",3],
+  ["Un sous-réseau doit accueillir exactement 50 hôtes. Masque le plus économique ?",["/26 (62 hôtes)","/27 (30 hôtes)","/25 (126 hôtes)","/28 (14 hôtes)"],0,"/27 ne donne que 30 hôtes ; il faut /26 (2^6 - 2 = 62).",3],
+  ["Adresse réseau de 10.5.130.200/22 ?",["10.5.128.0","10.5.130.0","10.5.132.0","10.5.0.0"],0,"/22 → bloc de 4 dans le 3e octet ; 130 tombe dans 128–131 → réseau 10.5.128.0.",3],
+  ["Adresse de broadcast de 10.5.130.200/22 ?",["10.5.131.255","10.5.130.255","10.5.132.255","10.5.128.255"],0,"Réseau 10.5.128.0/22 → plage 128–131, broadcast 10.5.131.255.",3],
+  ["Combien d'hôtes utilisables dans un /22 ?",["1022","1024","510","2046"],0,"2^10 - 2 = 1022 hôtes.",3],
+  ["De quelle MAC provient l'identifiant EUI-64 0250:56FF:FE3A:1C2B ?",["00:50:56:3A:1C:2B","02:50:56:3A:1C:2B","00:50:56:FF:3A:2B","50:56:3A:1C:2B:FF"],0,"On retire FFFE et on inverse le 7e bit : 02 redevient 00 → 00:50:56:3A:1C:2B.",3],
+  ["Adresse multicast de nœud sollicité associée à 2001:db8::ab:cd12:3456 ?",["ff02::1:ff12:3456","ff02::1:ffcd:1234","ff02::1:ab:3456","ff02::ff12:3456"],0,"Le multicast de nœud sollicité reprend les 24 derniers bits : ff02::1:ff12:3456.",3],
+  ["Masque pour découper un /24 en sous-réseaux de 6 hôtes utilisables au plus juste ?",["/29","/28","/30","/27"],0,"/29 = 2^3 - 2 = 6 hôtes utilisables.",3],
+  ["Combien de sous-réseaux /29 tiennent dans un /24 ?",["32","16","8","64"],0,"/24 → /29 emprunte 5 bits : 2^5 = 32 sous-réseaux.",3],
+  ["Combien de sous-réseaux /26 et combien d'hôtes obtient-on d'un /23 ?",["8 sous-réseaux de 62 hôtes","4 sous-réseaux de 62 hôtes","8 sous-réseaux de 30 hôtes","16 sous-réseaux de 14 hôtes"],0,"De /23 à /26 = 3 bits empruntés → 2^3 = 8 sous-réseaux, chacun 2^6 - 2 = 62 hôtes.",3],
+ ],
+ osi:[
+  ["MTU Ethernet de 1500 octets, en-têtes IP + TCP de 40 octets : quel est le MSS TCP ?",["1460","1500","1480","1420"],0,"MSS = MTU - en-têtes IP (20) - TCP (20) = 1460 octets.",3],
+  ["Un hôte envoie un SYN avec numéro de séquence 1000. Quel numéro d'accusé (ack) renvoie le serveur dans le SYN-ACK ?",["1001","1000","1002","2000"],0,"L'ack confirme le prochain octet attendu : seq + 1 = 1001.",3],
+  ["Dans quel état se trouve une socket TCP après l'envoi du SYN, en attente du SYN-ACK ?",["SYN-SENT","SYN-RECEIVED","ESTABLISHED","LISTEN"],0,"Le client passe en SYN-SENT jusqu'à réception du SYN-ACK.",3],
+  ["Taille de l'en-tête UDP ?",["8 octets","20 octets","12 octets","16 octets"],0,"L'en-tête UDP fait 8 octets (ports source/dest, longueur, checksum).",3],
+  ["Entre deux routeurs successifs, qu'est-ce qui change dans l'en-tête à chaque saut ?",["Les adresses MAC source/destination (L2), les IP de bout en bout restent","Les adresses IP, les MAC restent","Rien ne change","Le numéro de port"],0,"À chaque saut routé, l'en-tête L2 est réécrit ; les IP source/destination restent (hors NAT).",3],
+  ["Combien d'entrées ARP un PC crée-t-il pour communiquer avec 5 serveurs situés sur un autre réseau ?",["1 (la MAC de la passerelle)","5","6","0"],0,"Pour des destinations hors sous-réseau, l'hôte n'a besoin que de la MAC de sa passerelle.",3],
+  ["Quel message ICMP un routeur renvoie-t-il lorsque le TTL d'un paquet atteint 0 ?",["Time Exceeded (type 11)","Destination Unreachable (type 3)","Echo Reply (type 0)","Redirect (type 5)"],0,"TTL expiré → ICMP Time Exceeded (type 11), base du fonctionnement de traceroute.",3],
+  ["Quel champ TCP permet de réassembler les segments dans le bon ordre ?",["Le numéro de séquence","Le numéro de port","La somme de contrôle","Le TTL"],0,"Le numéro de séquence ordonne les octets pour le réassemblage côté récepteur.",3],
+  ["Quel mécanisme TCP réduit la fenêtre après détection de pertes pour éviter la congestion ?",["Le contrôle de congestion (slow start / congestion avoidance)","Le split horizon","Le three-way handshake","Le contrôle de parité"],0,"TCP réduit sa fenêtre de congestion (cwnd) et repart en slow start après des pertes.",3],
+  ["Pourquoi UDP est-il préféré à TCP pour la VoIP malgré l'absence de retransmission ?",["La retransmission ajouterait de la latence et de la gigue, néfastes au temps réel","UDP est chiffré","UDP garantit l'ordre","UDP utilise moins de ports"],0,"En temps réel, mieux vaut perdre un paquet que d'attendre sa retransmission : UDP évite la latence.",3],
+ ],
+ acl:[
+  ["ACL étendue autorisant HTTPS de 10.1.1.0/24 vers le seul serveur 172.16.5.10 ?",["access-list 110 permit tcp 10.1.1.0 0.0.0.255 host 172.16.5.10 eq 443","access-list 10 permit tcp 10.1.1.0 0.0.0.255 eq 443","access-list 110 permit ip 10.1.1.0 0.0.0.255 host 172.16.5.10","access-list 110 permit tcp host 172.16.5.10 10.1.1.0 0.0.0.255 eq 443"],0,"Source réseau, destination host, port destination 443 : une ACL étendue (100-199) est nécessaire.",3],
+  ["Pour bloquer un hôte précis mais autoriser le reste de son réseau, dans quel ordre placer les entrées ?",["Le deny host AVANT le permit du réseau","Le permit du réseau avant le deny host","Peu importe l'ordre","Deux ACL séparées sont obligatoires"],0,"L'ACL s'arrête au premier match : le deny spécifique doit précéder le permit plus large.",3],
+  ["Quelle commande renumérote les séquences d'une ACL nommée ?",["ip access-list resequence","access-list renumber","resequence acl","ip acl sequence"],0,"ip access-list resequence <nom> <début> <pas> réattribue les numéros de séquence.",3],
+  ["En DHCP snooping, quels ports faut-il déclarer 'trusted' ?",["Ceux menant au serveur DHCP légitime (uplinks)","Tous les ports d'accès","Aucun","Les ports vers les PC"],0,"Seuls les ports vers le serveur DHCP légitime sont trusted ; les autres bloquent les réponses DHCP.",3],
+  ["Une ACL appliquée en `in` sur une interface filtre le trafic :",["Entrant dans l'interface, avant la décision de routage","Sortant de l'interface, après routage","Dans les deux sens","Uniquement le trafic local au routeur"],0,"Une ACL 'in' est évaluée à l'entrée de l'interface, avant le routage.",3],
+  ["Différence clé entre le mot-clé `established` et une ACL réflexive ?",["established ne teste que les bits ACK/RST ; la réflexive crée des entrées dynamiques par session","Elles sont identiques","La réflexive ne marche qu'en UDP","established crée des sessions dynamiques"],0,"established est statique (bits TCP) ; une ACL réflexive génère des permis temporaires basés sur les sessions sortantes.",3],
+  ["Wildcard permettant de matcher d'un seul coup les réseaux 192.168.0.0/24 à 192.168.7.0/24 ?",["192.168.0.0 0.0.7.255","192.168.0.0 0.0.255.255","192.168.0.0 0.0.0.255","192.168.0.0 0.0.3.255"],0,"Huit /24 (0–7) = un bloc /21 → wildcard 0.0.7.255.",3],
+  ["Que se passe-t-il si on applique une ACL inexistante (vide) à une interface avec `ip access-group 50 in` ?",["Tout le trafic passe (une ACL vide n'a pas de deny implicite actif)","Tout est bloqué","L'interface tombe","Erreur de configuration"],0,"Une ACL référencée mais non définie n'a aucune entrée : le deny implicite ne s'applique pas, tout passe.",3],
+  ["Quel protocole AAA permet une autorisation granulaire par commande (command authorization) ?",["TACACS+","RADIUS","SNMP","Kerberos"],0,"TACACS+ sépare l'autorisation et gère le contrôle par commande, contrairement à RADIUS.",3],
+  ["Effet de `switchport port-security violation protect` lors d'une violation ?",["Le trafic en excès est silencieusement rejeté, sans journalisation ni compteur","Le port passe en err-disabled","Un log et un compteur sont générés","Le switch redémarre"],0,"protect rejette les trames non autorisées sans alerter (ni log, ni incrément), à la différence de restrict et shutdown.",3],
+ ],
+};
+
 const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const maskFromCidr=c=>{let m=[0,0,0,0];for(let i=0;i<c;i++)m[i/8|0]+=(128>>(i%8));return m.join('.');};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -323,8 +387,9 @@ function staticsOf(topic){
  const map=k=>BANK[k][1].map((q,i)=>mk(k,q[0],q[1],q[2],q[3],(SDIFF[k]&&SDIFF[k][i])||2));
  const hard=k=>(HARD[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],3));
  const more=k=>(MORE[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],q[4]||2));
- if(topic==='all'){let o=[];for(const k in BANK)o=o.concat(map(k),hard(k),more(k));return o;}
- return BANK[topic]?map(topic).concat(hard(topic),more(topic)):[];
+ const expert=k=>(EXPERT[k]||[]).map(q=>mk(k,q[0],q[1],q[2],q[3],3));
+ if(topic==='all'){let o=[];for(const k in BANK)o=o.concat(map(k),hard(k),more(k),expert(k));return o;}
+ return BANK[topic]?map(topic).concat(hard(topic),more(topic),expert(topic)):[];
 }
 function genOf(topic){
  if(topic==='all'){const ks=Object.keys(GEN);return GEN[ks[ri(0,ks.length-1)]]();}
