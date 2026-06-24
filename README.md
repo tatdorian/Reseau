@@ -38,7 +38,7 @@ Tes potes : http://192.168.1.42:3000   (meme WiFi)
 - Changer le port : `PORT=4000 npm start`.
 - Voir la taille du pool de questions par theme : `node server.js count`.
 - Reglage dans `server.js` en haut : `DUR` (duree par question, 30 s). Le passage a la question suivante est desormais declenche manuellement par l'hote.
-- Niveaux de difficulte : Facile / Moyen / Difficile / Expert, filtres selon le choix de l'hote. Difficile et surtout Expert sont des questions type examen CCNA 200-301 (scenarios, depannage, VLSM, election DR/BDR, coût STP/OSPF, resume de routes, EUI-64, solicited-node IPv6, MSS, ACL etendues, port-security, AAA...). Le mode Expert est le plus dur (calculs multi-etapes, cas limites). L'ordre des reponses est melange a chaque tirage.
+- Mode unique Expert : toutes les parties se jouent au niveau Expert, le plus difficile (questions type examen CCNA 200-301 : scenarios, depannage, VLSM, election DR/BDR, coût STP/OSPF, resume de routes, EUI-64, solicited-node IPv6, MSS, ACL etendues, port-security, AAA, calculs multi-etapes...). L'ordre des reponses est melange a chaque tirage.
 - Variete : sur "Tous les themes", le tirage est equilibre en round-robin entre VLAN / Routage / IP / OSI / ACL pour couvrir tous les themes. Les questions du questionnaire precedent sont evitees au suivant. Si un niveau a trop peu de questions pour le total demande, le pool est complete automatiquement.
 - Au reveal, on affiche la reponse choisie par chaque joueur (bonne/mauvaise/sans reponse), en plus de la bonne reponse et de l'explication.
 - Anti-repetition : les questions du questionnaire precedent sont evitees au tirage suivant, donc ca change a chaque partie.

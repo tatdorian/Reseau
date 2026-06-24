@@ -494,7 +494,7 @@ wss.on('connection',(ws,req)=>{
       const p=players.get(ws);
       if(p){p.title=(m.title||'').toString().slice(0,24);pushLobby();}
     }else if(m.t==='start'){
-      if(ws===hostWs()&&!game){const c=[5,10,15].includes(m.count)?m.count:10;const d=DIFFS[m.diff]?m.diff:'all';startGame(m.topic||'all',c,d);}
+      if(ws===hostWs()&&!game){const c=[5,10,15].includes(m.count)?m.count:10;startGame(m.topic||'all',c,'expert');}
     }else if(m.t==='next'){
       // Seul l'hôte fait passer à la question suivante après le reveal.
       if(ws===hostWs()&&game&&game.revealed)nextQuestion();

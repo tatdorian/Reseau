@@ -173,16 +173,8 @@
         <div><label>Questions</label>
           <select id="selCount"><option>5</option><option selected>10</option><option>15</option></select>
         </div>
-        <div><label>Niveau</label>
-          <select id="selDiff">
-            <option value="all">Tous niveaux</option>
-            <option value="facile">Facile</option>
-            <option value="moyen">Moyen</option>
-            <option value="difficile">Difficile</option>
-            <option value="expert">Expert 💀</option>
-          </select>
-        </div>
       </div>
+      <div class="info" style="margin-top:10px">Mode <b>Expert 💀</b> — questions CCNA les plus difficiles, tous thèmes confondus.</div>
       <button class="btn" id="startBtn">Démarrer la partie</button>
     </div>
     <div id="guestCtrl" class="wait hidden">En attente que l'hôte lance la partie…</div>
@@ -255,7 +247,7 @@
 <script>
 const $=id=>document.getElementById(id);
 const C=2*Math.PI*52;
-let ws,phase="connecting",isHost=false,myName="",lastTopic="all",lastCount=10,lastDiff="all",timerInt=null,joinName="",retryInt=null;
+let ws,phase="connecting",isHost=false,myName="",lastTopic="all",lastCount=10,timerInt=null,joinName="",retryInt=null;
 
 function screen(name){phase=name;["join","lobby","profile","play","reveal","over"].forEach(s=>$(s).classList.toggle("hidden",s!==name));window.scrollTo(0,0);}
 function esc(s){return s.replace(/`([^`]+)`/g,"<code>$1</code>");}
@@ -341,8 +333,8 @@ $("name").addEventListener("keydown",e=>{if(e.key==="Enter")$("joinBtn").click()
 $("profBtnJoin").onclick=openProfile;
 $("profBtnLobby").onclick=openProfile;
 $("profBack").onclick=closeProfile;
-$("startBtn").onclick=()=>{lastTopic=$("selTopic").value;lastCount=+$("selCount").value;lastDiff=$("selDiff").value;send({t:"start",topic:lastTopic,count:lastCount,diff:lastDiff});};
-$("replayBtn").onclick=()=>send({t:"start",topic:lastTopic,count:lastCount,diff:lastDiff});
+$("startBtn").onclick=()=>{lastTopic=$("selTopic").value;lastCount=+$("selCount").value;send({t:"start",topic:lastTopic,count:lastCount,diff:"expert"});};
+$("replayBtn").onclick=()=>send({t:"start",topic:lastTopic,count:lastCount,diff:"expert"});
 $("nextBtn").onclick=()=>{$("nextBtn").disabled=true;send({t:"next"});};
 $("menuBtn").onclick=()=>send({t:"menu"});
 $("revMenuBtn").onclick=()=>send({t:"menu"});
