@@ -91,6 +91,27 @@
   .b1{height:96px;background:linear-gradient(var(--amber),#7a5f10)} .b2{height:70px;background:linear-gradient(#cbd5e1,#64748b)} .b3{height:52px;background:linear-gradient(#d8a06b,#7a4a25)}
   .av1{background:var(--amber)} .av2{background:#cbd5e1} .av3{background:#d8a06b}
 
+  /* profil / passe de combat */
+  .me-head{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:14px 0}
+  .me-head .ava{font-size:1.5rem;width:32px;text-align:center}
+  .me-head .who{flex:1;font-size:.82rem;color:var(--muted)}
+  .me-head .who b{color:var(--teal)}
+  .bp{margin:6px 0 12px}
+  .bplvl{font-family:var(--mono);font-size:.9rem;margin-bottom:6px}
+  .bplvl b{color:var(--teal);font-size:1.15rem}
+  .bpbar{height:12px;background:var(--surface2);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+  .bpfill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));width:0%;transition:width .4s}
+  .bpxp{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:5px;text-align:right}
+  .avgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+  .avitem{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    background:var(--surface2);border:1px solid var(--line);border-radius:12px;cursor:pointer;font-size:1.55rem;transition:.12s}
+  .avitem:hover{border-color:var(--teal)}
+  .avitem.sel{border-color:var(--teal);box-shadow:inset 0 0 0 2px var(--teal)}
+  .avitem.lock{opacity:.35;cursor:not-allowed;filter:grayscale(1)}
+  .avitem .req{font-size:.52rem;font-family:var(--mono);color:var(--muted)}
+  .levelup{text-align:center;color:var(--amber);font-family:var(--mono);font-weight:700;margin:8px 0 2px}
+  @media(max-width:480px){.avgrid{grid-template-columns:repeat(4,1fr)}}
+
   footer{text-align:center;color:var(--muted);font-size:.72rem;margin-top:18px;font-family:var(--mono)}
   @media(max-width:480px){.opts{grid-template-columns:1fr}.ctrls{grid-template-columns:1fr}}
 </style>
@@ -103,8 +124,10 @@
   <div class="card" id="join">
     <h2>Rejoindre la partie</h2>
     <p class="dim">Choisis un pseudo pour entrer dans le lobby.</p>
-    <input id="name" placeholder="Ton pseudo" maxlength="16" style="margin-top:14px" autofocus>
+    <div class="me-head" id="meHead"><span class="ava" id="meAva">🙂</span><span class="who">Niveau <b id="meLvl">1</b> · ton avatar</span></div>
+    <input id="name" placeholder="Ton pseudo" maxlength="16" autofocus>
     <button class="btn" id="joinBtn">Rejoindre</button>
+    <button class="btn alt" id="profBtnJoin">🎖️ Profil · Passe de combat</button>
   </div>
 
   <!-- LOBBY -->
@@ -140,7 +163,22 @@
     </div>
     <div id="guestCtrl" class="wait hidden">En attente que l'hôte lance la partie…</div>
     <div id="noHostCtrl" class="wait hidden">En attente que l'hôte ouvre le lobby…</div>
+    <button class="btn alt" id="profBtnLobby">🎖️ Profil · Passe de combat</button>
     <div class="info">Partage l'adresse affichée dans ton terminal pour que tes potes rejoignent (même WiFi).</div>
+  </div>
+
+  <!-- PROFILE / BATTLE PASS -->
+  <div class="card hidden" id="profile">
+    <h2>Profil · Passe de combat</h2>
+    <p class="dim">Gagne de l'XP à chaque partie pour monter de niveau et débloquer des avatars.</p>
+    <div class="bp">
+      <div class="bplvl">Niveau <b id="bpLvl">1</b></div>
+      <div class="bpbar"><div class="bpfill" id="bpFill"></div></div>
+      <div class="bpxp" id="bpXp">0 / 2500 XP</div>
+    </div>
+    <p class="dim">Choisis ton avatar :</p>
+    <div class="avgrid" id="avGrid"></div>
+    <button class="btn" id="profBack">Retour</button>
   </div>
 
   <!-- PLAY -->
@@ -174,6 +212,7 @@
   <div class="card hidden" id="over">
     <h2 style="text-align:center">Résultats</h2>
     <div class="podium" id="podium"></div>
+    <div class="levelup hidden" id="overXp"></div>
     <div class="lb" id="oLb"></div>
     <button class="btn hidden" id="replayBtn">Rejouer</button>
     <button class="btn alt hidden" id="menuBtn">Retour au menu</button>
@@ -188,8 +227,39 @@ const $=id=>document.getElementById(id);
 const C=2*Math.PI*52;
 let ws,phase="connecting",isHost=false,myName="",lastTopic="all",lastCount=10,lastDiff="all",timerInt=null,joinName="",retryInt=null;
 
-function screen(name){phase=name;["join","lobby","play","reveal","over"].forEach(s=>$(s).classList.toggle("hidden",s!==name));window.scrollTo(0,0);}
+function screen(name){phase=name;["join","lobby","profile","play","reveal","over"].forEach(s=>$(s).classList.toggle("hidden",s!==name));window.scrollTo(0,0);}
 function esc(s){return s.replace(/`([^`]+)`/g,"<code>$1</code>");}
+
+/* ---- Passe de combat (XP) : sauvegarde 100% navigateur (localStorage) ---- */
+const AVATARS=[
+  {e:"🙂",lvl:1},{e:"😎",lvl:1},{e:"🐱",lvl:1},{e:"🦊",lvl:2},{e:"🐼",lvl:3},
+  {e:"🚀",lvl:4},{e:"👾",lvl:5},{e:"🐉",lvl:6},{e:"🧠",lvl:7},{e:"🛰️",lvl:8},
+  {e:"⚡",lvl:9},{e:"🔥",lvl:10},{e:"💎",lvl:12},{e:"👑",lvl:14},{e:"🏆",lvl:16}
+];
+const LEVEL_XP=2500;
+let myXP=+(localStorage.getItem("qr_xp")||0)||0;
+let myAvatar=localStorage.getItem("qr_avatar")||"🙂";
+const levelFromXP=xp=>Math.floor(xp/LEVEL_XP)+1;
+function saveBP(){localStorage.setItem("qr_xp",myXP);localStorage.setItem("qr_avatar",myAvatar);}
+function updateMeHead(){$("meAva").textContent=myAvatar;$("meLvl").textContent=levelFromXP(myXP);}
+let profileReturn="join";
+function openProfile(){profileReturn=(phase==="lobby")?"lobby":"join";renderProfile();screen("profile");}
+function closeProfile(){screen(profileReturn);}
+function renderProfile(){
+  const lvl=levelFromXP(myXP),into=myXP%LEVEL_XP;
+  $("bpLvl").textContent=lvl;
+  $("bpFill").style.width=(into/LEVEL_XP*100)+"%";
+  $("bpXp").textContent=into+" / "+LEVEL_XP+" XP  ·  total "+myXP+" XP";
+  const g=$("avGrid");g.innerHTML="";
+  AVATARS.forEach(a=>{
+    const unlocked=lvl>=a.lvl;
+    const d=document.createElement("div");
+    d.className="avitem"+(unlocked?"":" lock")+(a.e===myAvatar?" sel":"");
+    d.innerHTML=`<span>${a.e}</span>`+(unlocked?"":`<span class="req">Niv ${a.lvl}</span>`);
+    if(unlocked)d.onclick=()=>{myAvatar=a.e;saveBP();updateMeHead();renderProfile();send({t:"avatar",avatar:myAvatar});};
+    g.appendChild(d);
+  });
+}
 
 function connect(){
   ws=new WebSocket((location.protocol==="https:"?"wss":"ws")+"://"+location.host+location.pathname+location.search);
@@ -199,8 +269,11 @@ function connect(){
 }
 const send=o=>ws&&ws.readyState===1&&ws.send(JSON.stringify(o));
 
-$("joinBtn").onclick=()=>{const n=$("name").value.trim();if(!n)return $("name").focus();myName=n;joinName=n;send({t:"join",name:n});};
+$("joinBtn").onclick=()=>{const n=$("name").value.trim();if(!n)return $("name").focus();myName=n;joinName=n;send({t:"join",name:n,avatar:myAvatar});};
 $("name").addEventListener("keydown",e=>{if(e.key==="Enter")$("joinBtn").click();});
+$("profBtnJoin").onclick=openProfile;
+$("profBtnLobby").onclick=openProfile;
+$("profBack").onclick=closeProfile;
 $("startBtn").onclick=()=>{lastTopic=$("selTopic").value;lastCount=+$("selCount").value;lastDiff=$("selDiff").value;send({t:"start",topic:lastTopic,count:lastCount,diff:lastDiff});};
 $("replayBtn").onclick=()=>send({t:"start",topic:lastTopic,count:lastCount,diff:lastDiff});
 $("nextBtn").onclick=()=>{$("nextBtn").disabled=true;send({t:"next"});};
@@ -212,7 +285,7 @@ function handle(m){
     if(retryInt){clearInterval(retryInt);retryInt=null;}
     isHost=m.host;
     $("pcount").textContent=m.players.length;
-    $("plist").innerHTML=m.players.map(p=>`<span class="ptag"><span class="d"></span>${escapeHtml(p.name)}</span>`).join("");
+    $("plist").innerHTML=m.players.map(p=>`<span class="ptag"><span class="d"></span>${p.avatar?escapeHtml(p.avatar)+" ":""}${escapeHtml(p.name)}</span>`).join("");
     $("hostCtrl").classList.toggle("hidden",!m.host);
     $("guestCtrl").classList.toggle("hidden",m.host||!m.hasHost);
     $("noHostCtrl").classList.toggle("hidden",m.hasHost);
@@ -282,7 +355,7 @@ function showReveal(m){
 }
 function boardRows(board){
   return board.map((p,i)=>{const me=p.name===myName?" me":"";const st=p.streak>=2?` 🔥${p.streak}`:"";
-    return `<div class="lbr${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(p.name)}${st}</span>${p.gain>0?`<span class="pg">+${p.gain}</span>`:'<span class="pg"></span>'}<span class="sc">${p.score}</span></div>`;}).join("");
+    return `<div class="lbr${me}"><span class="rk">${i+1}</span><span class="nm">${p.avatar?escapeHtml(p.avatar)+" ":""}${escapeHtml(p.name)}${st}</span>${p.gain>0?`<span class="pg">+${p.gain}</span>`:'<span class="pg"></span>'}<span class="sc">${p.score}</span></div>`;}).join("");
 }
 
 function showOver(m){
@@ -290,10 +363,17 @@ function showOver(m){
   const pod=$("podium");pod.innerHTML="";
   order.forEach(pos=>{if(!top[pos])return;const p=top[pos],rank=pos+1;
     const d=document.createElement("div");d.className="pod";
-    d.innerHTML=`<div class="av av${rank}">${escapeHtml((p.name[0]||"?").toUpperCase())}</div>
+    d.innerHTML=`<div class="av av${rank}">${p.avatar?escapeHtml(p.avatar):escapeHtml((p.name[0]||"?").toUpperCase())}</div>
       <div class="nm">${escapeHtml(p.name)}</div><div class="sc">${p.score} pts</div>
       <div class="bar b${rank}">${rank===1?"🏆":rank}</div>`;
     pod.appendChild(d);});
+  // XP du passe de combat pour le joueur local
+  const meRow=m.board.find(p=>p.name===myName);
+  if(meRow){
+    const before=levelFromXP(myXP);myXP+=meRow.score;const after=levelFromXP(myXP);saveBP();updateMeHead();
+    $("overXp").textContent=after>before?`+${meRow.score} XP — niveau ${after} atteint ! 🎉`:`+${meRow.score} XP · niveau ${after}`;
+    $("overXp").classList.remove("hidden");
+  }else $("overXp").classList.add("hidden");
   $("oLb").innerHTML=boardRows(b);
   $("replayBtn").classList.toggle("hidden",!m.host);
   $("menuBtn").classList.toggle("hidden",!m.host);
@@ -302,6 +382,7 @@ function showOver(m){
 }
 
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+updateMeHead();
 connect();
 </script>
 </body>
